@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Daily Division</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- SCREEN 1: HOME -->
+  <div id="screen-home" class="screen">
+    <div class="app-header">
+      <h1 class="app-title">Daily Division</h1>
+      <p class="app-subtitle">Greek Gods Edition</p>
+    </div>
+
+    <div class="god-showcase" id="god-showcase">
+      <div class="god-icon" id="god-icon">🪽</div>
+      <div class="god-info">
+        <div class="god-name" id="god-name">Hermes</div>
+        <div class="god-flavor" id="god-flavor">Train with Hermes &mdash; speed is everything!</div>
+      </div>
+    </div>
+
+    <section class="card">
+      <h2 class="card-title">Choose Your God</h2>
+      <div class="btn-group" id="difficulty-group">
+        <button class="choice-btn active" data-value="easy">
+          <span class="btn-icon">🪽</span>
+          <span class="btn-label">Hermes</span>
+          <span class="btn-sub">Easy</span>
+        </button>
+        <button class="choice-btn" data-value="medium">
+          <span class="btn-icon">🦉</span>
+          <span class="btn-label">Athena</span>
+          <span class="btn-sub">Medium</span>
+        </button>
+        <button class="choice-btn" data-value="hard">
+          <span class="btn-icon">⚡</span>
+          <span class="btn-label">Zeus</span>
+          <span class="btn-sub">Hard</span>
+        </button>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2 class="card-title">Choose Timer</h2>
+      <div class="btn-group" id="timer-group">
+        <button class="choice-btn active" data-value="1">
+          <span class="btn-label">1 min</span>
+        </button>
+        <button class="choice-btn" data-value="2">
+          <span class="btn-label">2 min</span>
+        </button>
+        <button class="choice-btn" data-value="3">
+          <span class="btn-label">3 min</span>
+        </button>
+      </div>
+    </section>
+
+    <div class="high-score-display" id="home-high-score">
+      <span class="hs-label">Best Score</span>
+      <span class="hs-value" id="hs-value">—</span>
+    </div>
+
+    <button class="start-btn" id="btn-start">Embark! ⚔️</button>
+  </div>
+
+  <!-- SCREEN 2: GAME -->
+  <div id="screen-game" class="screen hidden">
+    <div class="game-header">
+      <div class="stat-box">
+        <span class="stat-label">Score</span>
+        <span class="stat-value" id="live-score">0</span>
+      </div>
+
+      <div class="timer-container">
+        <svg class="timer-ring" viewBox="0 0 100 100" aria-hidden="true">
+          <circle class="ring-bg" cx="50" cy="50" r="42"/>
+          <circle class="ring-fill" id="ring-fill" cx="50" cy="50" r="42"/>
+        </svg>
+        <span class="timer-text" id="live-timer">2:00</span>
+      </div>
+
+      <div class="stat-box">
+        <span class="stat-label">Best</span>
+        <span class="stat-value" id="live-best">0</span>
+      </div>
+    </div>
+
+    <div class="problem-wrapper" id="problem-wrapper">
+      <div class="problem-card" id="problem-card">
+        <div class="problem-text">
+          <span class="problem-num" id="dividend">24</span>
+          <span class="problem-op">÷</span>
+          <span class="problem-num" id="divisor">6</span>
+          <span class="problem-eq">=</span>
+        </div>
+        <input
+          type="number"
+          id="answer-input"
+          class="answer-input"
+          inputmode="numeric"
+          pattern="[0-9]*"
+          placeholder="?"
+          autocomplete="off"
+          autocorrect="off"
+          min="0"
+          max="999"
+        >
+      </div>
+    </div>
+
+    <div class="game-actions">
+      <button class="skip-btn" id="btn-skip">Skip ⏭</button>
+    </div>
+
+    <div class="feedback" id="feedback" aria-live="polite"></div>
+
+    <div class="confetti-layer" id="confetti-layer" aria-hidden="true"></div>
+  </div>
+
+  <!-- SCREEN 3: RESULTS -->
+  <div id="screen-results" class="screen hidden">
+    <div class="results-god-icon" id="results-god-icon">🪽</div>
+    <h1 class="results-title">Time&rsquo;s Up!</h1>
+
+    <div class="results-score-card">
+      <span class="results-score-label">Your Score</span>
+      <span class="results-score-value" id="results-score">0</span>
+    </div>
+
+    <div class="new-hs-banner hidden" id="new-hs-banner">
+      ⭐ New High Score! ⭐
+    </div>
+
+    <div class="results-meta" id="results-meta">Hermes &middot; 2 minutes</div>
+    <div class="results-prev-best" id="results-prev-best">Previous best: —</div>
+
+    <button class="start-btn" id="btn-play-again">Play Again 🔄</button>
+    <button class="secondary-btn" id="btn-home">Change Settings</button>
+
+    <div class="confetti-layer" id="results-confetti-layer" aria-hidden="true"></div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

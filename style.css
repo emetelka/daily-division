@@ -1,0 +1,647 @@
+/* =============================================
+   CSS CUSTOM PROPERTIES
+   ============================================= */
+:root {
+  --bg: #0D1B2A;
+  --card-bg: #1B2B3B;
+  --card-border: #2A3F55;
+  --text: #F0E6D3;
+  --text-muted: #8FA8BF;
+  --correct: #6BCB77;
+  --wrong: #FF6B6B;
+  --urgent: #FF6B6B;
+  --ring-bg: #2A3F55;
+  --shadow: 0 8px 32px rgba(0,0,0,0.4);
+
+  /* God accent — overridden by JS */
+  --accent: #FFD700;
+  --accent-glow: rgba(255, 215, 0, 0.25);
+  --accent-dark: #CC9900;
+}
+
+/* =============================================
+   BASE / RESET
+   ============================================= */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 18px;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Chalkboard SE', 'Comic Sans MS', 'Bradley Hand', cursive;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1rem 1rem 2rem;
+  overflow-x: hidden;
+}
+
+/* Background stars */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    radial-gradient(1px 1px at 10% 15%, rgba(255,255,255,0.6) 0%, transparent 100%),
+    radial-gradient(1px 1px at 25% 40%, rgba(255,255,255,0.4) 0%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 40% 10%, rgba(255,255,255,0.7) 0%, transparent 100%),
+    radial-gradient(1px 1px at 55% 60%, rgba(255,255,255,0.3) 0%, transparent 100%),
+    radial-gradient(1px 1px at 70% 25%, rgba(255,255,255,0.5) 0%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 80% 75%, rgba(255,255,255,0.6) 0%, transparent 100%),
+    radial-gradient(1px 1px at 90% 45%, rgba(255,255,255,0.4) 0%, transparent 100%),
+    radial-gradient(1px 1px at 15% 80%, rgba(255,255,255,0.5) 0%, transparent 100%),
+    radial-gradient(1px 1px at 60% 90%, rgba(255,255,255,0.3) 0%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 35% 65%, rgba(255,255,255,0.4) 0%, transparent 100%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* =============================================
+   SCREEN SYSTEM
+   ============================================= */
+.screen {
+  width: 100%;
+  max-width: 560px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.25rem;
+  position: relative;
+  z-index: 1;
+  animation: screenFadeIn 0.4s ease both;
+}
+
+.hidden {
+  display: none !important;
+}
+
+@keyframes screenFadeIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* =============================================
+   HOME SCREEN
+   ============================================= */
+.app-header {
+  text-align: center;
+  padding-top: 0.5rem;
+}
+
+.app-title {
+  font-size: 2.4rem;
+  color: var(--accent);
+  text-shadow: 0 0 20px var(--accent-glow), 0 2px 4px rgba(0,0,0,0.5);
+  letter-spacing: 0.02em;
+  transition: color 0.4s, text-shadow 0.4s;
+}
+
+.app-subtitle {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-top: 0.2rem;
+}
+
+/* God showcase */
+.god-showcase {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background: var(--card-bg);
+  border: 2px solid var(--accent);
+  border-radius: 20px;
+  padding: 1rem 1.5rem;
+  width: 100%;
+  box-shadow: 0 0 20px var(--accent-glow), var(--shadow);
+  transition: border-color 0.4s, box-shadow 0.4s;
+}
+
+.god-icon {
+  font-size: 3.5rem;
+  animation: float 2s ease-in-out infinite;
+  will-change: transform;
+  flex-shrink: 0;
+}
+
+.god-info {
+  flex: 1;
+}
+
+.god-name {
+  font-size: 1.6rem;
+  color: var(--accent);
+  transition: color 0.4s;
+}
+
+.god-flavor {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-top: 0.25rem;
+  line-height: 1.4;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-8px); }
+}
+
+/* Cards */
+.card {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 20px;
+  padding: 1.25rem 1.5rem;
+  width: 100%;
+  box-shadow: var(--shadow);
+}
+
+.card-title {
+  font-size: 1rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 0.85rem;
+  text-align: center;
+}
+
+/* Button groups */
+.btn-group {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.choice-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+  background: var(--bg);
+  border: 2px solid var(--card-border);
+  border-radius: 16px;
+  padding: 0.75rem 1rem;
+  min-width: 90px;
+  min-height: 64px;
+  cursor: pointer;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 0.9rem;
+  transition: border-color 0.2s, background 0.2s, transform 0.15s, box-shadow 0.2s;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+.choice-btn:active {
+  transform: scale(0.95);
+}
+
+.choice-btn.active {
+  border-color: var(--accent);
+  background: rgba(255,255,255,0.05);
+  box-shadow: 0 0 12px var(--accent-glow);
+  animation: selectedPulse 0.3s ease;
+}
+
+.choice-btn .btn-icon {
+  font-size: 1.6rem;
+}
+
+.choice-btn .btn-label {
+  font-size: 1rem;
+  font-weight: bold;
+}
+
+.choice-btn .btn-sub {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+@keyframes selectedPulse {
+  0%   { transform: scale(1); }
+  50%  { transform: scale(1.08); }
+  100% { transform: scale(1); }
+}
+
+/* High score display */
+.high-score-display {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+}
+
+.hs-label {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.hs-value {
+  font-size: 2.2rem;
+  color: var(--accent);
+  transition: color 0.4s;
+}
+
+/* Start button */
+.start-btn {
+  width: 100%;
+  padding: 1.1rem;
+  font-size: 1.5rem;
+  font-family: inherit;
+  background: var(--accent);
+  color: var(--bg);
+  border: none;
+  border-radius: 20px;
+  cursor: pointer;
+  font-weight: bold;
+  box-shadow: 0 4px 20px var(--accent-glow), 0 2px 8px rgba(0,0,0,0.3);
+  transition: background 0.3s, box-shadow 0.3s, transform 0.15s;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+.start-btn:active {
+  transform: scale(0.97);
+}
+
+/* =============================================
+   GAME SCREEN
+   ============================================= */
+.game-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0.5rem 0;
+  gap: 1rem;
+}
+
+.stat-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+  min-width: 70px;
+}
+
+.stat-label {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.stat-value {
+  font-size: 2rem;
+  color: var(--text);
+  transition: transform 0.2s;
+}
+
+.stat-value.pop {
+  animation: scorePop 0.3s ease;
+}
+
+@keyframes scorePop {
+  0%   { transform: scale(1); }
+  50%  { transform: scale(1.5); color: var(--accent); }
+  100% { transform: scale(1); }
+}
+
+/* Timer */
+.timer-container {
+  position: relative;
+  width: 90px;
+  height: 90px;
+  flex-shrink: 0;
+}
+
+.timer-ring {
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+
+.ring-bg {
+  fill: none;
+  stroke: var(--ring-bg);
+  stroke-width: 8;
+}
+
+.ring-fill {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 8;
+  stroke-linecap: round;
+  stroke-dasharray: 263.9;
+  stroke-dashoffset: 0;
+  transition: stroke-dashoffset 1s linear, stroke 0.3s;
+  will-change: stroke-dashoffset;
+}
+
+.ring-fill.urgent {
+  stroke: var(--urgent);
+  animation: ringPulse 0.5s ease-in-out infinite;
+}
+
+@keyframes ringPulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.4; }
+}
+
+.timer-text {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  color: var(--text);
+  font-weight: bold;
+  transform: rotate(0deg); /* SVG is rotated, text stays upright */
+}
+
+.timer-text.urgent {
+  color: var(--urgent);
+  animation: ringPulse 0.5s ease-in-out infinite;
+}
+
+/* Problem area */
+.problem-wrapper {
+  width: 100%;
+  overflow: hidden;
+}
+
+.problem-card {
+  background: var(--card-bg);
+  border: 2px solid var(--card-border);
+  border-radius: 24px;
+  padding: 1.75rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.25rem;
+  box-shadow: var(--shadow);
+  animation: slideInRight 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  will-change: transform;
+}
+
+.problem-card.correct-flash {
+  animation: correctFlash 0.4s ease both;
+}
+
+.problem-card.shake {
+  animation: shake 0.4s ease both;
+}
+
+@keyframes slideInRight {
+  from { transform: translateX(60px); opacity: 0; }
+  to   { transform: translateX(0);    opacity: 1; }
+}
+
+@keyframes correctFlash {
+  0%   { background: var(--card-bg); transform: scale(1); }
+  30%  { background: rgba(107, 203, 119, 0.25); transform: scale(1.04); border-color: var(--correct); }
+  100% { background: var(--card-bg); transform: scale(1); }
+}
+
+@keyframes shake {
+  0%   { transform: translateX(0); }
+  15%  { transform: translateX(-10px); }
+  45%  { transform: translateX(10px); }
+  75%  { transform: translateX(-6px); }
+  100% { transform: translateX(0); }
+}
+
+.problem-text {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.problem-num {
+  font-size: 4.5rem;
+  color: var(--text);
+  line-height: 1;
+}
+
+.problem-op,
+.problem-eq {
+  font-size: 3rem;
+  color: var(--accent);
+  transition: color 0.4s;
+}
+
+.answer-input {
+  font-size: 3rem;
+  font-family: inherit;
+  width: 150px;
+  text-align: center;
+  background: var(--bg);
+  color: var(--text);
+  border: 3px solid var(--card-border);
+  border-radius: 16px;
+  padding: 0.5rem;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+/* Hide number input spinners */
+.answer-input::-webkit-outer-spin-button,
+.answer-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+}
+
+.answer-input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 12px var(--accent-glow);
+}
+
+/* Skip button */
+.game-actions {
+  width: 100%;
+}
+
+.skip-btn {
+  width: 100%;
+  padding: 0.85rem;
+  font-size: 1.1rem;
+  font-family: inherit;
+  background: transparent;
+  color: var(--text-muted);
+  border: 2px solid var(--card-border);
+  border-radius: 16px;
+  cursor: pointer;
+  transition: color 0.2s, border-color 0.2s, transform 0.15s;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+.skip-btn:active {
+  transform: scale(0.97);
+  color: var(--text);
+  border-color: var(--text-muted);
+}
+
+/* Feedback */
+.feedback {
+  font-size: 1.6rem;
+  font-weight: bold;
+  min-height: 2.2rem;
+  text-align: center;
+  transition: opacity 0.3s;
+}
+
+.feedback.correct {
+  color: var(--correct);
+}
+
+.feedback.wrong {
+  color: var(--wrong);
+}
+
+/* =============================================
+   CONFETTI
+   ============================================= */
+.confetti-layer {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 999;
+  overflow: hidden;
+}
+
+.confetti-particle {
+  position: absolute;
+  font-size: 1.6rem;
+  pointer-events: none;
+  animation: confettiFly 1.2s ease-out forwards;
+  will-change: transform, opacity;
+}
+
+@keyframes confettiFly {
+  0%   { transform: translateY(0) rotate(0deg) scale(1); opacity: 1; }
+  100% { transform: translateY(-180px) rotate(360deg) scale(0.5); opacity: 0; }
+}
+
+/* =============================================
+   RESULTS SCREEN
+   ============================================= */
+.results-god-icon {
+  font-size: 5rem;
+  animation: bounceIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  margin-top: 0.5rem;
+}
+
+@keyframes bounceIn {
+  0%   { transform: translateY(-60px) scale(0.5); opacity: 0; }
+  60%  { transform: translateY(10px) scale(1.1); opacity: 1; }
+  80%  { transform: translateY(-5px) scale(0.97); }
+  100% { transform: translateY(0) scale(1); opacity: 1; }
+}
+
+.results-title {
+  font-size: 2rem;
+  color: var(--text);
+}
+
+.results-score-card {
+  background: var(--card-bg);
+  border: 2px solid var(--accent);
+  border-radius: 24px;
+  padding: 1.5rem 2.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  box-shadow: 0 0 24px var(--accent-glow), var(--shadow);
+  width: 100%;
+  transition: border-color 0.4s, box-shadow 0.4s;
+}
+
+.results-score-label {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.results-score-value {
+  font-size: 5rem;
+  color: var(--accent);
+  line-height: 1;
+  transition: color 0.4s;
+}
+
+/* New high score banner */
+.new-hs-banner {
+  font-size: 1.4rem;
+  color: var(--bg);
+  background: linear-gradient(90deg, var(--accent), #fff8c0, var(--accent));
+  background-size: 200% 100%;
+  border-radius: 12px;
+  padding: 0.6rem 1.5rem;
+  animation: shimmer 1.5s ease infinite;
+  font-weight: bold;
+  text-align: center;
+}
+
+@keyframes shimmer {
+  0%   { background-position: 100% 0; }
+  100% { background-position: -100% 0; }
+}
+
+.results-meta {
+  font-size: 0.95rem;
+  color: var(--text-muted);
+}
+
+.results-prev-best {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+.secondary-btn {
+  width: 100%;
+  padding: 0.9rem;
+  font-size: 1.1rem;
+  font-family: inherit;
+  background: transparent;
+  color: var(--text-muted);
+  border: 2px solid var(--card-border);
+  border-radius: 16px;
+  cursor: pointer;
+  transition: color 0.2s, border-color 0.2s, transform 0.15s;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+.secondary-btn:active {
+  transform: scale(0.97);
+  color: var(--text);
+  border-color: var(--text-muted);
+}
+
+/* =============================================
+   RESPONSIVE TWEAKS FOR SMALLER SCREENS
+   ============================================= */
+@media (max-width: 400px) {
+  html { font-size: 16px; }
+  .problem-num { font-size: 3.5rem; }
+  .answer-input { font-size: 2.5rem; width: 130px; }
+  .god-icon { font-size: 2.8rem; }
+  .results-score-value { font-size: 4rem; }
+}
