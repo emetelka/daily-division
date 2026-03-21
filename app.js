@@ -1,9 +1,16 @@
 'use strict';
 
 const GODS = {
-  easy:   { name: 'Hermes', icon: '🪽', flavor: 'Train with Hermes \u2014 speed is everything!',       maxDividend: 20,  maxDivisor: 5,  accent: '#FFD700' },
-  medium: { name: 'Athena', icon: '🦉', flavor: "Seek Athena's wisdom \u2014 think before you leap!", maxDividend: 50,  maxDivisor: 10, accent: '#B57BEE' },
-  hard:   { name: 'Zeus',   icon: '⚡', flavor: 'Prove yourself to Zeus \u2014 only the strongest survive!', maxDividend: 100, maxDivisor: 12, accent: '#4A9FD4' },
+  division: {
+    easy:   { name: 'Hermes', icon: '🪽', flavor: 'Train with Hermes \u2014 speed is everything!',            maxDividend: 20,  maxDivisor: 5,  accent: '#FFD700' },
+    medium: { name: 'Athena', icon: '🦉', flavor: "Seek Athena's wisdom \u2014 think before you leap!",      maxDividend: 50,  maxDivisor: 10, accent: '#B57BEE' },
+    hard:   { name: 'Zeus',   icon: '⚡', flavor: 'Prove yourself to Zeus \u2014 only the strongest survive!', maxDividend: 100, maxDivisor: 12, accent: '#4A9FD4' },
+  },
+  multiplication: {
+    easy:   { name: 'Aphrodite', icon: '🌸', flavor: 'Let Aphrodite charm you \u2014 beauty is in every answer!', maxFactor: 10, accent: '#FF6B9D' },
+    medium: { name: 'Poseidon',  icon: '🔱', flavor: 'Command Poseidon\u2019s power \u2014 the seas obey!',       maxFactor: 12, accent: '#00B4D8' },
+    hard:   { name: 'Ares',      icon: '\u2694\ufe0f', flavor: 'Face Ares in battle \u2014 glory to the victorious!', maxFactor: 15, accent: '#E63946' },
+  },
 };
 
 const RING_CIRCUMFERENCE = 2 * Math.PI * 42;
@@ -19,6 +26,7 @@ const RESULTS_CONFETTI_EMOJIS = ['⭐', '🌟', '✨', '💫', '🌠', '🎉', '
 
 const state = {
   difficulty:          'easy',
+  operation:           'division',
   timerMinutes:        1,
   score:               0,
   currentAnswer:       null,
@@ -40,6 +48,7 @@ const els = {
   godName:         document.getElementById('god-name'),
   godFlavor:       document.getElementById('god-flavor'),
   difficultyGroup: document.getElementById('difficulty-group'),
+  operationGroup:  document.getElementById('operation-group'),
   timerGroup:      document.getElementById('timer-group'),
   hsValue:         document.getElementById('hs-value'),
   btnStart:        document.getElementById('btn-start'),
@@ -49,10 +58,12 @@ const els = {
   liveTimer:       document.getElementById('live-timer'),
   ringFill:        document.getElementById('ring-fill'),
   problemCard:     document.getElementById('problem-card'),
+  problemOp:       document.getElementById('problem-op'),
   dividend:        document.getElementById('dividend'),
   divisor:         document.getElementById('divisor'),
   answerInput:     document.getElementById('answer-input'),
   btnSkip:         document.getElementById('btn-skip'),
+  btnExit:         document.getElementById('btn-exit'),
   feedback:        document.getElementById('feedback'),
   confettiLayer:   document.getElementById('confetti-layer'),
 
@@ -67,7 +78,7 @@ const els = {
 };
 
 function hsKey(difficulty, minutes) {
-  return `dailydivision_hs_${difficulty}_${minutes}`;
+  return `dailydivision_hs_${difficulty}_${state.operation}_${minutes}`;
 }
 
 function getHighScore(difficulty, minutes) {
@@ -90,11 +101,16 @@ function randInt(min, max) {
 }
 
 function generateProblem() {
-  const cfg = GODS[state.difficulty];
-  const divisor = randInt(1, cfg.maxDivisor);
-  const maxQuotient = Math.floor(cfg.maxDividend / divisor);
-  const quotient = randInt(1, Math.max(1, maxQuotient));
-  return { dividend: divisor * quotient, divisor, answer: quotient };
+  const cfg = GODS[state.operation][state.difficulty];
+  if (state.operation === 'division') {
+    const divisor = randInt(1, cfg.maxDivisor);
+    const quotient = randInt(1, Math.max(1, Math.floor(cfg.maxDividend / divisor)));
+    return { a: divisor * quotient, b: divisor, answer: quotient, op: '\u00f7' };
+  } else {
+    const a = randInt(1, cfg.maxFactor);
+    const b = randInt(1, cfg.maxFactor);
+    return { a, b, answer: a * b, op: '\u00d7' };
+  }
 }
 
 // Force-restarts an animation on an element by resetting style + className and triggering reflow.
@@ -107,7 +123,7 @@ function triggerCardAnimation(animationValue) {
 }
 
 function applyGodTheme(difficulty) {
-  const god = GODS[difficulty];
+  const god = GODS[state.operation][difficulty];
   document.documentElement.style.setProperty('--accent', god.accent);
   document.documentElement.style.setProperty('--accent-glow', hexToRgba(god.accent));
   els.ringFill.style.stroke = god.accent;
@@ -140,6 +156,7 @@ function updateHomeHighScore() {
 
 function syncActiveButtons() {
   setActiveBtn(els.difficultyGroup, state.difficulty);
+  setActiveBtn(els.operationGroup, state.operation);
   setActiveBtn(els.timerGroup, String(state.timerMinutes));
 }
 
@@ -168,11 +185,12 @@ function showGame() {
 }
 
 function loadNextProblem(animate = true) {
-  const { dividend, divisor, answer } = generateProblem();
+  const { a, b, answer, op } = generateProblem();
   state.currentAnswer = answer;
 
-  els.dividend.textContent = String(dividend);
-  els.divisor.textContent = String(divisor);
+  els.dividend.textContent = String(a);
+  els.divisor.textContent = String(b);
+  els.problemOp.textContent = op;
   els.answerInput.value = '';
 
   if (animate) {
@@ -271,12 +289,12 @@ function updateTimerRing(isUrgent) {
     els.ringFill.style.stroke = '#FF6B6B';
   } else {
     els.ringFill.classList.remove('urgent');
-    els.ringFill.style.stroke = GODS[state.difficulty].accent;
+    els.ringFill.style.stroke = GODS[state.operation][state.difficulty].accent;
   }
 }
 
 function showResults() {
-  const god = GODS[state.difficulty];
+  const god = GODS[state.operation][state.difficulty];
   const finalScore = state.score;
   const prevBest = getHighScore(state.difficulty, state.timerMinutes);
   const isNewHS = finalScore > prevBest;
@@ -347,6 +365,15 @@ els.difficultyGroup.addEventListener('click', e => {
   updateHomeHighScore();
 });
 
+els.operationGroup.addEventListener('click', e => {
+  const btn = e.target.closest('.choice-btn');
+  if (!btn) return;
+  state.operation = btn.dataset.value;
+  setActiveBtn(els.operationGroup, state.operation);
+  applyGodTheme(state.difficulty);
+  updateHomeHighScore();
+});
+
 els.timerGroup.addEventListener('click', e => {
   const btn = e.target.closest('.choice-btn');
   if (!btn) return;
@@ -358,6 +385,7 @@ els.timerGroup.addEventListener('click', e => {
 els.btnStart.addEventListener('click', showGame);
 els.answerInput.addEventListener('input', handleAnswerInput);
 els.btnSkip.addEventListener('click', handleSkip);
+els.btnExit.addEventListener('click', showHome);
 els.btnPlayAgain.addEventListener('click', showGame);
 els.btnHome.addEventListener('click', showHome);
 

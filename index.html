@@ -45,6 +45,20 @@
     </section>
 
     <section class="card">
+      <h2 class="card-title">Choose Math</h2>
+      <div class="btn-group" id="operation-group">
+        <button class="choice-btn active" data-value="division">
+          <span class="btn-icon">➗</span>
+          <span class="btn-label">Division</span>
+        </button>
+        <button class="choice-btn" data-value="multiplication">
+          <span class="btn-icon">✖️</span>
+          <span class="btn-label">Multiply</span>
+        </button>
+      </div>
+    </section>
+
+    <section class="card">
       <h2 class="card-title">Choose Timer</h2>
       <div class="btn-group" id="timer-group">
         <button class="choice-btn active" data-value="1">
@@ -93,7 +107,7 @@
       <div class="problem-card" id="problem-card">
         <div class="problem-text">
           <span class="problem-num" id="dividend">24</span>
-          <span class="problem-op">÷</span>
+          <span class="problem-op" id="problem-op">÷</span>
           <span class="problem-num" id="divisor">6</span>
           <span class="problem-eq">=</span>
         </div>
@@ -114,6 +128,7 @@
 
     <div class="game-actions">
       <button class="skip-btn" id="btn-skip">Skip ⏭</button>
+      <button class="exit-btn" id="btn-exit">← Home</button>
     </div>
 
     <div class="feedback" id="feedback" aria-live="polite"></div>

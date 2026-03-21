@@ -470,9 +470,12 @@ body::before {
   box-shadow: 0 0 12px var(--accent-glow);
 }
 
-/* Skip button */
+/* Skip / exit buttons */
 .game-actions {
   width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 }
 
 .skip-btn {
@@ -494,6 +497,27 @@ body::before {
   transform: scale(0.97);
   color: var(--text);
   border-color: var(--text-muted);
+}
+
+.exit-btn {
+  width: 100%;
+  padding: 0.6rem;
+  font-size: 0.9rem;
+  font-family: inherit;
+  background: transparent;
+  color: var(--text-muted);
+  border: 1px solid var(--card-border);
+  border-radius: 12px;
+  cursor: pointer;
+  opacity: 0.6;
+  transition: opacity 0.2s, transform 0.15s;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+.exit-btn:active {
+  opacity: 1;
+  transform: scale(0.97);
 }
 
 /* Feedback */
