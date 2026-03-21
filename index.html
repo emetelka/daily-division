@@ -34,6 +34,10 @@
           <span class="btn-icon">✖️</span>
           <span class="btn-label">Multiply</span>
         </button>
+        <button class="choice-btn" data-value="fraction">
+          <span class="btn-icon">½</span>
+          <span class="btn-label">Fractions</span>
+        </button>
       </div>
     </section>
 
@@ -105,7 +109,7 @@
 
     <div class="problem-wrapper" id="problem-wrapper">
       <div class="problem-card" id="problem-card">
-        <div class="problem-text">
+        <div class="problem-text" id="problem-text">
           <span class="problem-num" id="dividend">24</span>
           <span class="problem-op" id="problem-op">÷</span>
           <span class="problem-num" id="divisor">6</span>
@@ -123,6 +127,15 @@
           min="0"
           max="999"
         >
+        <div class="fraction-answer hidden" id="fraction-answer">
+          <input id="numer-input" class="answer-input" type="number"
+                 inputmode="numeric" pattern="[0-9]*" placeholder="?"
+                 autocomplete="off" autocorrect="off" min="1" max="999">
+          <div class="frac-answer-line"></div>
+          <input id="denom-input" class="answer-input" type="number"
+                 inputmode="numeric" pattern="[0-9]*" placeholder="?"
+                 autocomplete="off" autocorrect="off" min="1" max="999">
+        </div>
       </div>
     </div>
 

@@ -499,6 +499,57 @@ body::before {
   border-color: var(--text-muted);
 }
 
+/* Fraction problem display */
+.problem-text.fraction-layout {
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.problem-text.fraction-layout .problem-op {
+  width: 5rem;
+  height: 5px;
+  background: var(--accent);
+  border-radius: 3px;
+  transition: background 0.4s;
+  font-size: 0;
+  line-height: 0;
+  display: block;
+}
+
+.problem-text.fraction-layout .problem-eq {
+  margin-top: 0.5rem;
+}
+
+/* Fraction answer inputs */
+.fraction-answer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.frac-answer-line {
+  width: 130px;
+  height: 5px;
+  background: var(--accent);
+  border-radius: 3px;
+  transition: background 0.4s;
+}
+
+/* Input error state */
+.answer-input.input-error {
+  border-color: var(--wrong) !important;
+  animation: inputShake 0.35s ease;
+}
+
+@keyframes inputShake {
+  0%   { transform: translateX(0); }
+  25%  { transform: translateX(-7px); }
+  75%  { transform: translateX(7px); }
+  100% { transform: translateX(0); }
+}
+
 .exit-btn {
   width: 100%;
   padding: 0.6rem;

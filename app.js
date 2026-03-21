@@ -11,6 +11,11 @@ const GODS = {
     medium: { name: 'Poseidon',  icon: '🔱', flavor: 'Command Poseidon\u2019s power \u2014 the seas obey!',       maxFactor: 12, accent: '#00B4D8' },
     hard:   { name: 'Ares',      icon: '\u2694\ufe0f', flavor: 'Face Ares in battle \u2014 glory to the victorious!', maxFactor: 15, accent: '#E63946' },
   },
+  fraction: {
+    easy:   { name: 'Demeter',    icon: '\ud83c\udf3e', flavor: 'Let Demeter guide you \u2014 harvest the simplest form!',          maxGcd: 5,  maxSimplified: 5,  accent: '#7CB342' },
+    medium: { name: 'Hephaestus', icon: '\u2692\ufe0f',  flavor: 'Forge with Hephaestus \u2014 precision is the craftsman\u2019s gift!', maxGcd: 8,  maxSimplified: 8,  accent: '#FF8C00' },
+    hard:   { name: 'Hades',      icon: '\ud83d\udc80',  flavor: 'Enter Hades\u2019 domain \u2014 only the sharpest minds endure!',  maxGcd: 12, maxSimplified: 12, accent: '#9C27B0' },
+  },
 };
 
 const RING_CIRCUMFERENCE = 2 * Math.PI * 42;
@@ -25,16 +30,18 @@ const CONFETTI_EMOJIS         = ['⭐', '🌟', '✨', '💫', '🌠'];
 const RESULTS_CONFETTI_EMOJIS = ['⭐', '🌟', '✨', '💫', '🌠', '🎉', '🎊', '🏆'];
 
 const state = {
-  difficulty:          'easy',
-  operation:           'division',
-  timerMinutes:        1,
-  score:               0,
-  currentAnswer:       null,
-  secondsLeft:         0,
-  totalSeconds:        0,
-  timerInterval:       null,
-  scoreCountInterval:  null,
-  advancing:           false,
+  difficulty:           'easy',
+  operation:            'division',
+  timerMinutes:         1,
+  score:                0,
+  currentAnswer:        null,
+  currentAnswerNum:     null,
+  currentAnswerDenom:   null,
+  secondsLeft:          0,
+  totalSeconds:         0,
+  timerInterval:        null,
+  scoreCountInterval:   null,
+  advancing:            false,
 };
 
 const screens = {
@@ -61,7 +68,11 @@ const els = {
   problemOp:       document.getElementById('problem-op'),
   dividend:        document.getElementById('dividend'),
   divisor:         document.getElementById('divisor'),
+  problemText:     document.getElementById('problem-text'),
   answerInput:     document.getElementById('answer-input'),
+  fractionAnswer:  document.getElementById('fraction-answer'),
+  numerInput:      document.getElementById('numer-input'),
+  denomInput:      document.getElementById('denom-input'),
   btnSkip:         document.getElementById('btn-skip'),
   btnExit:         document.getElementById('btn-exit'),
   feedback:        document.getElementById('feedback'),
@@ -100,16 +111,30 @@ function randInt(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
+function gcd(a, b) {
+  return b === 0 ? a : gcd(b, a % b);
+}
+
 function generateProblem() {
   const cfg = GODS[state.operation][state.difficulty];
   if (state.operation === 'division') {
     const divisor = randInt(1, cfg.maxDivisor);
     const quotient = randInt(1, Math.max(1, Math.floor(cfg.maxDividend / divisor)));
     return { a: divisor * quotient, b: divisor, answer: quotient, op: '\u00f7' };
-  } else {
+  } else if (state.operation === 'multiplication') {
     const a = randInt(1, cfg.maxFactor);
     const b = randInt(1, cfg.maxFactor);
     return { a, b, answer: a * b, op: '\u00d7' };
+  } else {
+    // fraction: generate unsimplified fraction, answer is the simplified form
+    let simplNum, simplDenom, factor;
+    do {
+      factor     = randInt(2, cfg.maxGcd);
+      simplNum   = randInt(1, cfg.maxSimplified);
+      simplDenom = randInt(2, cfg.maxSimplified);
+    } while (simplNum === simplDenom || gcd(simplNum, simplDenom) !== 1);
+    return { a: simplNum * factor, b: simplDenom * factor,
+             answerNum: simplNum, answerDenom: simplDenom, op: 'fraction' };
   }
 }
 
@@ -190,17 +215,31 @@ function showGame() {
   loadNextProblem(false);
   startTimer();
 
-  setTimeout(() => els.answerInput.focus(), 100);
+  setTimeout(() => (state.operation === 'fraction' ? els.numerInput : els.answerInput).focus(), 100);
 }
 
 function loadNextProblem(animate = true) {
-  const { a, b, answer, op } = generateProblem();
-  state.currentAnswer = answer;
+  const { a, b, answer, answerNum, answerDenom, op } = generateProblem();
+  state.currentAnswer      = answer      ?? null;
+  state.currentAnswerNum   = answerNum   ?? null;
+  state.currentAnswerDenom = answerDenom ?? null;
 
   els.dividend.textContent = String(a);
-  els.divisor.textContent = String(b);
-  els.problemOp.textContent = op;
-  els.answerInput.value = '';
+  els.divisor.textContent  = String(b);
+
+  const isFraction = (op === 'fraction');
+  els.problemText.classList.toggle('fraction-layout', isFraction);
+  els.answerInput.classList.toggle('hidden', isFraction);
+  els.fractionAnswer.classList.toggle('hidden', !isFraction);
+
+  if (isFraction) {
+    els.problemOp.textContent = '';
+    els.numerInput.value  = '';
+    els.denomInput.value  = '';
+  } else {
+    els.problemOp.textContent = op;
+    els.answerInput.value = '';
+  }
 
   if (animate) {
     triggerCardAnimation(ANIMATIONS.slideIn);
@@ -208,18 +247,43 @@ function loadNextProblem(animate = true) {
 
   // Delay keeps the iPad keyboard open between problems
   setTimeout(() => {
-    els.answerInput.focus();
+    (isFraction ? els.numerInput : els.answerInput).focus();
     state.advancing = false;
   }, 50);
+}
+
+function isDefinitelyWrong(val, answer) {
+  return !isNaN(val) && val !== 0 && !String(answer).startsWith(String(val));
+}
+
+function flashInputError(inputEl) {
+  inputEl.classList.remove('input-error');
+  inputEl.offsetHeight;
+  inputEl.classList.add('input-error');
+  setTimeout(() => inputEl.classList.remove('input-error'), 400);
 }
 
 function handleAnswerInput() {
   if (state.advancing) return;
 
-  const val = parseInt(els.answerInput.value.replace(/[^0-9]/g, ''), 10);
-  if (val === state.currentAnswer) {
-    state.advancing = true;
-    onCorrectAnswer();
+  if (state.operation === 'fraction') {
+    const num = parseInt(els.numerInput.value.replace(/[^0-9]/g, ''), 10);
+    const den = parseInt(els.denomInput.value.replace(/[^0-9]/g, ''), 10);
+    if (num === state.currentAnswerNum && den === state.currentAnswerDenom) {
+      state.advancing = true;
+      onCorrectAnswer();
+      return;
+    }
+    if (els.numerInput.value !== '' && isDefinitelyWrong(num, state.currentAnswerNum))   flashInputError(els.numerInput);
+    if (els.denomInput.value !== '' && isDefinitelyWrong(den, state.currentAnswerDenom)) flashInputError(els.denomInput);
+  } else {
+    const val = parseInt(els.answerInput.value.replace(/[^0-9]/g, ''), 10);
+    if (val === state.currentAnswer) {
+      state.advancing = true;
+      onCorrectAnswer();
+      return;
+    }
+    if (els.answerInput.value !== '' && isDefinitelyWrong(val, state.currentAnswer)) flashInputError(els.answerInput);
   }
 }
 
@@ -394,6 +458,8 @@ els.timerGroup.addEventListener('click', e => {
 
 els.btnStart.addEventListener('click', showGame);
 els.answerInput.addEventListener('input', handleAnswerInput);
+els.numerInput.addEventListener('input', handleAnswerInput);
+els.denomInput.addEventListener('input', handleAnswerInput);
 els.btnSkip.addEventListener('click', handleSkip);
 els.btnExit.addEventListener('click', showHome);
 els.btnPlayAgain.addEventListener('click', showGame);
