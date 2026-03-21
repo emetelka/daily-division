@@ -711,6 +711,49 @@ body::before {
 }
 
 /* =============================================
+   COMPACT LAYOUT — SOFTWARE KEYBOARD OPEN
+   ============================================= */
+.keyboard-open #screen-game {
+  gap: 0.4rem;
+}
+.keyboard-open .game-header {
+  padding: 0.2rem 0;
+}
+.keyboard-open .timer-container {
+  width: 70px;
+  height: 70px;
+}
+.keyboard-open .stat-value {
+  font-size: 1.5rem;
+}
+.keyboard-open .problem-card {
+  padding: 0.7rem 1rem;
+  gap: 0.7rem;
+}
+.keyboard-open .problem-num {
+  font-size: 3rem;
+}
+.keyboard-open .problem-op,
+.keyboard-open .problem-eq {
+  font-size: 2rem;
+}
+.keyboard-open .answer-input {
+  font-size: 2rem;
+  width: 120px;
+}
+.keyboard-open .skip-btn {
+  padding: 0.5rem;
+  font-size: 0.95rem;
+}
+.keyboard-open .exit-btn {
+  padding: 0.35rem;
+}
+.keyboard-open .feedback {
+  font-size: 1.1rem;
+  min-height: 1.5rem;
+}
+
+/* =============================================
    RESPONSIVE TWEAKS FOR SMALLER SCREENS
    ============================================= */
 @media (max-width: 400px) {

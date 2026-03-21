@@ -12,9 +12,9 @@ const GODS = {
     hard:   { name: 'Ares',      icon: '\u2694\ufe0f', flavor: 'Face Ares in battle \u2014 glory to the victorious!', maxFactor: 15, accent: '#E63946' },
   },
   fraction: {
-    easy:   { name: 'Demeter',    icon: '\ud83c\udf3e', flavor: 'Let Demeter guide you \u2014 harvest the simplest form!',          maxGcd: 5,  maxSimplified: 5,  accent: '#7CB342' },
-    medium: { name: 'Hephaestus', icon: '\u2692\ufe0f',  flavor: 'Forge with Hephaestus \u2014 precision is the craftsman\u2019s gift!', maxGcd: 8,  maxSimplified: 8,  accent: '#FF8C00' },
-    hard:   { name: 'Hades',      icon: '\ud83d\udc80',  flavor: 'Enter Hades\u2019 domain \u2014 only the sharpest minds endure!',  maxGcd: 12, maxSimplified: 12, accent: '#9C27B0' },
+    easy:   { name: 'Demeter',    icon: '\ud83c\udf3e', flavor: 'Begin with Demeter \u2014 every answer divides by 2!',              maxGcd: 2,  maxSimplified: 4,  properOnly: true,  accent: '#7CB342' },
+    medium: { name: 'Hephaestus', icon: '\u2692\ufe0f',  flavor: 'Forge with Hephaestus \u2014 precision is the craftsman\u2019s gift!', maxGcd: 5,  maxSimplified: 5,  accent: '#FF8C00' },
+    hard:   { name: 'Hades',      icon: '\ud83d\udc80',  flavor: 'Enter Hades\u2019 domain \u2014 only the sharpest minds endure!',      maxGcd: 12, maxSimplified: 12, accent: '#9C27B0' },
   },
 };
 
@@ -126,24 +126,24 @@ function generateProblem() {
     const b = randInt(1, cfg.maxFactor);
     return { a, b, answer: a * b, op: '\u00d7' };
   } else {
-    // fraction: generate unsimplified fraction, answer is the simplified form
     let simplNum, simplDenom, factor;
     do {
       factor     = randInt(2, cfg.maxGcd);
       simplNum   = randInt(1, cfg.maxSimplified);
       simplDenom = randInt(2, cfg.maxSimplified);
-    } while (simplNum === simplDenom || gcd(simplNum, simplDenom) !== 1);
+    } while (simplNum === simplDenom || gcd(simplNum, simplDenom) !== 1 || (cfg.properOnly && simplNum > simplDenom));
     return { a: simplNum * factor, b: simplDenom * factor,
              answerNum: simplNum, answerDenom: simplDenom, op: 'fraction' };
   }
 }
 
-// Force-restarts an animation on an element by resetting style + className and triggering reflow.
+function forceReflow(el) { el.offsetHeight; }
+
 function triggerCardAnimation(animationValue) {
   els.problemCard.style.animation = 'none';
-  els.problemCard.offsetHeight;
+  forceReflow(els.problemCard);
   els.problemCard.className = 'problem-card';
-  els.problemCard.offsetHeight;
+  forceReflow(els.problemCard);
   els.problemCard.style.animation = animationValue;
 }
 
@@ -162,7 +162,7 @@ function showScreen(id) {
   const target = screens[id];
   target.classList.remove('hidden');
   target.style.animation = 'none';
-  target.offsetHeight;
+  forceReflow(target);
   target.style.animation = '';
 }
 
@@ -252,23 +252,29 @@ function loadNextProblem(animate = true) {
   }, 50);
 }
 
+function parseInput(inputEl) {
+  return parseInt(inputEl.value.replace(/[^0-9]/g, ''), 10);
+}
+
 function isDefinitelyWrong(val, answer) {
   return !isNaN(val) && val !== 0 && !String(answer).startsWith(String(val));
 }
 
+const inputErrorTimers = new WeakMap();
 function flashInputError(inputEl) {
+  clearTimeout(inputErrorTimers.get(inputEl));
   inputEl.classList.remove('input-error');
-  inputEl.offsetHeight;
+  forceReflow(inputEl);
   inputEl.classList.add('input-error');
-  setTimeout(() => inputEl.classList.remove('input-error'), 400);
+  inputErrorTimers.set(inputEl, setTimeout(() => inputEl.classList.remove('input-error'), 400));
 }
 
 function handleAnswerInput() {
   if (state.advancing) return;
 
   if (state.operation === 'fraction') {
-    const num = parseInt(els.numerInput.value.replace(/[^0-9]/g, ''), 10);
-    const den = parseInt(els.denomInput.value.replace(/[^0-9]/g, ''), 10);
+    const num = parseInput(els.numerInput);
+    const den = parseInput(els.denomInput);
     if (num === state.currentAnswerNum && den === state.currentAnswerDenom) {
       state.advancing = true;
       onCorrectAnswer();
@@ -277,7 +283,7 @@ function handleAnswerInput() {
     if (els.numerInput.value !== '' && isDefinitelyWrong(num, state.currentAnswerNum))   flashInputError(els.numerInput);
     if (els.denomInput.value !== '' && isDefinitelyWrong(den, state.currentAnswerDenom)) flashInputError(els.denomInput);
   } else {
-    const val = parseInt(els.answerInput.value.replace(/[^0-9]/g, ''), 10);
+    const val = parseInput(els.answerInput);
     if (val === state.currentAnswer) {
       state.advancing = true;
       onCorrectAnswer();
@@ -292,15 +298,17 @@ function onCorrectAnswer() {
   els.liveScore.textContent = String(state.score);
 
   els.liveScore.classList.remove('pop');
-  els.liveScore.offsetHeight;
+  forceReflow(els.liveScore);
   els.liveScore.classList.add('pop');
-  setTimeout(() => els.liveScore.classList.remove('pop'), 350);
 
   triggerCardAnimation(ANIMATIONS.correctFlash);
   spawnConfetti(els.confettiLayer, 7, CONFETTI_EMOJIS);
   showFeedback('Correct! \u2713', 'correct');
 
-  setTimeout(() => loadNextProblem(true), 350);
+  setTimeout(() => {
+    els.liveScore.classList.remove('pop');
+    loadNextProblem(true);
+  }, 350);
 }
 
 function handleSkip() {
@@ -471,4 +479,14 @@ els.btnHome.addEventListener('click', showHome);
   applyGodTheme(state.difficulty);
   syncActiveButtons();
   updateHomeHighScore();
+
+  function updateKeyboardState() {
+    const kbOpen = !!(window.visualViewport &&
+      window.visualViewport.height < window.innerHeight * 0.75);
+    if (kbOpen !== document.body.classList.contains('keyboard-open')) {
+      document.body.classList.toggle('keyboard-open', kbOpen);
+    }
+  }
+  window.visualViewport?.addEventListener('resize', updateKeyboardState);
+  updateKeyboardState();
 })();
