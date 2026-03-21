@@ -158,6 +158,15 @@ function syncActiveButtons() {
   setActiveBtn(els.difficultyGroup, state.difficulty);
   setActiveBtn(els.operationGroup, state.operation);
   setActiveBtn(els.timerGroup, String(state.timerMinutes));
+  updateDifficultyButtons();
+}
+
+function updateDifficultyButtons() {
+  els.difficultyGroup.querySelectorAll('.choice-btn').forEach(btn => {
+    const god = GODS[state.operation][btn.dataset.value];
+    btn.querySelector('.btn-icon').textContent  = god.icon;
+    btn.querySelector('.btn-label').textContent = god.name;
+  });
 }
 
 function setActiveBtn(groupEl, value) {
@@ -370,6 +379,7 @@ els.operationGroup.addEventListener('click', e => {
   if (!btn) return;
   state.operation = btn.dataset.value;
   setActiveBtn(els.operationGroup, state.operation);
+  updateDifficultyButtons();
   applyGodTheme(state.difficulty);
   updateHomeHighScore();
 });
