@@ -81,6 +81,7 @@
     <div class="high-score-display" id="home-high-score">
       <span class="hs-label">Best Score</span>
       <span class="hs-value" id="hs-value">—</span>
+      <button class="hs-lb-btn" id="btn-leaderboard-home">🏆 Leaderboard</button>
     </div>
 
     <button class="start-btn" id="btn-start">Embark! ⚔️</button>
@@ -169,8 +170,88 @@
 
     <button class="start-btn" id="btn-play-again">Play Again 🔄</button>
     <button class="secondary-btn" id="btn-home">Change Settings</button>
+    <button class="secondary-btn" id="btn-leaderboard-results">🏆 Leaderboard</button>
 
     <div class="confetti-layer" id="results-confetti-layer" aria-hidden="true"></div>
+  </div>
+
+  <!-- SCREEN 4: LEADERBOARD -->
+  <div id="screen-leaderboard" class="screen hidden">
+    <div class="app-header">
+      <h1 class="app-title lb-title">🏆 Leaderboard</h1>
+    </div>
+
+    <section class="card">
+      <h2 class="card-title">Choose Math</h2>
+      <div class="btn-group" id="lb-op-group">
+        <button class="choice-btn active" data-value="division">
+          <span class="btn-icon">➗</span>
+          <span class="btn-label">Division</span>
+        </button>
+        <button class="choice-btn" data-value="multiplication">
+          <span class="btn-icon">✖️</span>
+          <span class="btn-label">Multiply</span>
+        </button>
+        <button class="choice-btn" data-value="fraction">
+          <span class="btn-icon">½</span>
+          <span class="btn-label">Fractions</span>
+        </button>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2 class="card-title">Choose Your God</h2>
+      <div class="btn-group" id="lb-diff-group">
+        <button class="choice-btn active" data-value="easy">
+          <span class="btn-icon">🪽</span>
+          <span class="btn-label">Hermes</span>
+          <span class="btn-sub">Easy</span>
+        </button>
+        <button class="choice-btn" data-value="medium">
+          <span class="btn-icon">🦉</span>
+          <span class="btn-label">Athena</span>
+          <span class="btn-sub">Medium</span>
+        </button>
+        <button class="choice-btn" data-value="hard">
+          <span class="btn-icon">⚡</span>
+          <span class="btn-label">Zeus</span>
+          <span class="btn-sub">Hard</span>
+        </button>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2 class="card-title">Choose Timer</h2>
+      <div class="btn-group" id="lb-time-group">
+        <button class="choice-btn active" data-value="1">
+          <span class="btn-label">1 min</span>
+        </button>
+        <button class="choice-btn" data-value="2">
+          <span class="btn-label">2 min</span>
+        </button>
+        <button class="choice-btn" data-value="3">
+          <span class="btn-label">3 min</span>
+        </button>
+      </div>
+    </section>
+
+    <div id="lb-entries" class="card lb-entries-card"></div>
+
+    <button class="secondary-btn" id="btn-lb-back">← Back</button>
+  </div>
+
+  <!-- NAME ENTRY MODAL -->
+  <div id="name-modal" class="modal-overlay hidden">
+    <div class="modal-box">
+      <div class="modal-trophy">🏆</div>
+      <h2 class="modal-title">New High Score!</h2>
+      <p class="modal-sub">Enter your name for the leaderboard</p>
+      <input id="name-input" class="name-input" type="text"
+             placeholder="Your name" maxlength="20"
+             autocomplete="off" autocorrect="off" autocapitalize="words"
+             spellcheck="false">
+      <button id="btn-save-name" class="start-btn">Save ✓</button>
+    </div>
   </div>
 
   <script src="app.js"></script>
