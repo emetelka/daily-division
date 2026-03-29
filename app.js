@@ -140,6 +140,7 @@ function getHighScore(operation, difficulty, minutes) {
   return lb.length > 0 ? lb[0].score : 0;
 }
 
+
 function addToLeaderboard(operation, difficulty, minutes, score, name) {
   const lb = getLeaderboard(operation, difficulty, minutes);
   lb.push({ score, name: name.trim() || 'Anonymous' });
@@ -479,19 +480,22 @@ function updateTimerRing(isUrgent) {
 function showResults() {
   const god = GODS[state.operation][state.difficulty];
   const finalScore = state.score;
-  const prevBest = getHighScore(state.operation, state.difficulty, state.timerMinutes);
-  const isNewHS = finalScore > prevBest;
+  const lb       = getLeaderboard(state.operation, state.difficulty, state.timerMinutes);
+  const prevBest = lb.length > 0 ? lb[0].score : 0;
+  const isNewHS  = finalScore > prevBest;
+  const isTop3   = finalScore > 0 && (lb.length < 3 || finalScore > lb[lb.length - 1].score);
 
   els.resultsGodIcon.textContent = god.icon;
   els.resultsMeta.textContent = `${god.name} \u00B7 ${state.timerMinutes} minute${state.timerMinutes > 1 ? 's' : ''}`;
   els.resultsPrevBest.textContent = prevBest > 0 ? `Previous best: ${prevBest}` : 'First run!';
   els.resultsScore.textContent = '0';
-  els.newHsBanner.classList.toggle('hidden', !isNewHS);
+  els.newHsBanner.textContent = isNewHS ? '\u2B50 New High Score! \u2B50' : '\u2B50 Top 3 Score! \u2B50';
+  els.newHsBanner.classList.toggle('hidden', !isTop3);
 
   showScreen('results');
   animateScoreCount(finalScore, els.resultsScore);
 
-  if (isNewHS) {
+  if (isTop3) {
     setTimeout(() => spawnConfetti(els.resultsConfetti, 20, RESULTS_CONFETTI_EMOJIS, true), 300);
     // Show name modal after the score count finishes
     const countDuration = Math.min(1200, finalScore * 80) + 600;
