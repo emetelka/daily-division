@@ -28,6 +28,7 @@ const ANIMATIONS = {
 
 const CONFETTI_EMOJIS         = ['⭐', '🌟', '✨', '💫', '🌠'];
 const RESULTS_CONFETTI_EMOJIS = ['⭐', '🌟', '✨', '💫', '🌠', '🎉', '🎊', '🏆'];
+const MEDALS                  = ['🥇', '🥈', '🥉'];
 
 const state = {
   difficulty:           'easy',
@@ -41,25 +42,38 @@ const state = {
   totalSeconds:         0,
   timerInterval:        null,
   scoreCountInterval:   null,
+  modalTimer:           null,
   advancing:            false,
 };
 
+// Tracks current filter selections in the leaderboard screen
+const lbState = {
+  operation:    'division',
+  difficulty:   'easy',
+  minutes:      1,
+  returnScreen: 'home',
+};
+
 const screens = {
-  home:    document.getElementById('screen-home'),
-  game:    document.getElementById('screen-game'),
-  results: document.getElementById('screen-results'),
+  home:        document.getElementById('screen-home'),
+  game:        document.getElementById('screen-game'),
+  results:     document.getElementById('screen-results'),
+  leaderboard: document.getElementById('screen-leaderboard'),
 };
 
 const els = {
-  godIcon:         document.getElementById('god-icon'),
-  godName:         document.getElementById('god-name'),
-  godFlavor:       document.getElementById('god-flavor'),
-  difficultyGroup: document.getElementById('difficulty-group'),
-  operationGroup:  document.getElementById('operation-group'),
-  timerGroup:      document.getElementById('timer-group'),
-  hsValue:         document.getElementById('hs-value'),
-  btnStart:        document.getElementById('btn-start'),
+  // home
+  godIcon:              document.getElementById('god-icon'),
+  godName:              document.getElementById('god-name'),
+  godFlavor:            document.getElementById('god-flavor'),
+  difficultyGroup:      document.getElementById('difficulty-group'),
+  operationGroup:       document.getElementById('operation-group'),
+  timerGroup:           document.getElementById('timer-group'),
+  hsValue:              document.getElementById('hs-value'),
+  btnStart:             document.getElementById('btn-start'),
+  btnLeaderboardHome:   document.getElementById('btn-leaderboard-home'),
 
+  // game
   liveScore:       document.getElementById('live-score'),
   liveBest:        document.getElementById('live-best'),
   liveTimer:       document.getElementById('live-timer'),
@@ -78,27 +92,70 @@ const els = {
   feedback:        document.getElementById('feedback'),
   confettiLayer:   document.getElementById('confetti-layer'),
 
-  resultsGodIcon:  document.getElementById('results-god-icon'),
-  resultsScore:    document.getElementById('results-score'),
-  newHsBanner:     document.getElementById('new-hs-banner'),
-  resultsMeta:     document.getElementById('results-meta'),
-  resultsPrevBest: document.getElementById('results-prev-best'),
-  btnPlayAgain:    document.getElementById('btn-play-again'),
-  btnHome:         document.getElementById('btn-home'),
-  resultsConfetti: document.getElementById('results-confetti-layer'),
+  // results
+  resultsGodIcon:        document.getElementById('results-god-icon'),
+  resultsScore:          document.getElementById('results-score'),
+  newHsBanner:           document.getElementById('new-hs-banner'),
+  resultsMeta:           document.getElementById('results-meta'),
+  resultsPrevBest:       document.getElementById('results-prev-best'),
+  btnPlayAgain:          document.getElementById('btn-play-again'),
+  btnHome:               document.getElementById('btn-home'),
+  resultsConfetti:       document.getElementById('results-confetti-layer'),
+  btnLeaderboardResults: document.getElementById('btn-leaderboard-results'),
+
+  // leaderboard
+  lbOpGroup:   document.getElementById('lb-op-group'),
+  lbDiffGroup: document.getElementById('lb-diff-group'),
+  lbTimeGroup: document.getElementById('lb-time-group'),
+  lbEntries:   document.getElementById('lb-entries'),
+  btnLbBack:   document.getElementById('btn-lb-back'),
+
+  // name modal
+  nameModal:   document.getElementById('name-modal'),
+  nameInput:   document.getElementById('name-input'),
+  btnSaveName: document.getElementById('btn-save-name'),
 };
 
-function hsKey(difficulty, minutes) {
-  return `dailydivision_hs_${difficulty}_${state.operation}_${minutes}`;
+// =================== STORAGE ===================
+
+function hsKey(operation, difficulty, minutes) {
+  // Key format kept identical to legacy: hs_{difficulty}_{operation}_{minutes}
+  return `dailydivision_hs_${difficulty}_${operation}_${minutes}`;
 }
 
-function getHighScore(difficulty, minutes) {
-  return parseInt(localStorage.getItem(hsKey(difficulty, minutes)) || '0', 10);
+function getLeaderboard(operation, difficulty, minutes) {
+  const raw = localStorage.getItem(hsKey(operation, difficulty, minutes));
+  if (!raw) return [];
+  try {
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed)) return parsed;
+  } catch {}
+  // Legacy: plain number string → migrate to entry format
+  const n = parseInt(raw, 10);
+  return n > 0 ? [{ score: n, name: 'Anonymous' }] : [];
 }
 
-function saveHighScore(difficulty, minutes, score) {
-  localStorage.setItem(hsKey(difficulty, minutes), String(score));
+function getHighScore(operation, difficulty, minutes) {
+  const lb = getLeaderboard(operation, difficulty, minutes);
+  return lb.length > 0 ? lb[0].score : 0;
 }
+
+function addToLeaderboard(operation, difficulty, minutes, score, name) {
+  const lb = getLeaderboard(operation, difficulty, minutes);
+  lb.push({ score, name: name.trim() || 'Anonymous' });
+  lb.sort((a, b) => b.score - a.score);
+  localStorage.setItem(hsKey(operation, difficulty, minutes), JSON.stringify(lb.slice(0, 3)));
+}
+
+function getLastName() {
+  return localStorage.getItem('dailydivision_last_name') || '';
+}
+
+function saveLastName(name) {
+  if (name.trim()) localStorage.setItem('dailydivision_last_name', name.trim());
+}
+
+// =================== UTILITIES ===================
 
 function hexToRgba(hex, alpha = 0.25) {
   const r = parseInt(hex.slice(1, 3), 16);
@@ -114,6 +171,16 @@ function randInt(min, max) {
 function gcd(a, b) {
   return b === 0 ? a : gcd(b, a % b);
 }
+
+function escapeHtml(str) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+// =================== PROBLEM GENERATION ===================
 
 function generateProblem() {
   const cfg = GODS[state.operation][state.difficulty];
@@ -137,6 +204,8 @@ function generateProblem() {
   }
 }
 
+// =================== ANIMATION HELPERS ===================
+
 function forceReflow(el) { el.offsetHeight; }
 
 function triggerCardAnimation(animationValue) {
@@ -147,15 +216,24 @@ function triggerCardAnimation(animationValue) {
   els.problemCard.style.animation = animationValue;
 }
 
-function applyGodTheme(difficulty) {
-  const god = GODS[state.operation][difficulty];
+// =================== THEME ===================
+
+function applyAccent(operation, difficulty) {
+  const god = GODS[operation][difficulty];
   document.documentElement.style.setProperty('--accent', god.accent);
   document.documentElement.style.setProperty('--accent-glow', hexToRgba(god.accent));
+}
+
+function applyGodTheme(operation, difficulty) {
+  const god = GODS[operation][difficulty];
+  applyAccent(operation, difficulty);
   els.ringFill.style.stroke = god.accent;
   els.godIcon.textContent = god.icon;
   els.godName.textContent = god.name;
   els.godFlavor.textContent = god.flavor;
 }
+
+// =================== SCREEN MANAGEMENT ===================
 
 function showScreen(id) {
   Object.values(screens).forEach(s => s.classList.add('hidden'));
@@ -166,16 +244,29 @@ function showScreen(id) {
   target.style.animation = '';
 }
 
+// Cancel any pending modal timer and, if modal is already open, auto-save and close it
+function closePendingModal() {
+  clearTimeout(state.modalTimer);
+  state.modalTimer = null;
+  if (!els.nameModal.classList.contains('hidden')) {
+    const name = els.nameInput.value.trim() || getLastName() || 'Anonymous';
+    saveLastName(name);
+    addToLeaderboard(state.operation, state.difficulty, state.timerMinutes, state.score, name);
+    els.nameModal.classList.add('hidden');
+  }
+}
+
 function showHome() {
+  closePendingModal();
   stopTimer();
-  applyGodTheme(state.difficulty);
+  applyGodTheme(state.operation, state.difficulty);
   updateHomeHighScore();
   syncActiveButtons();
   showScreen('home');
 }
 
 function updateHomeHighScore() {
-  const hs = getHighScore(state.difficulty, state.timerMinutes);
+  const hs = getHighScore(state.operation, state.difficulty, state.timerMinutes);
   els.hsValue.textContent = hs > 0 ? String(hs) : '—';
 }
 
@@ -186,12 +277,16 @@ function syncActiveButtons() {
   updateDifficultyButtons();
 }
 
-function updateDifficultyButtons() {
-  els.difficultyGroup.querySelectorAll('.choice-btn').forEach(btn => {
-    const god = GODS[state.operation][btn.dataset.value];
+function populateDiffButtons(groupEl, operation) {
+  groupEl.querySelectorAll('.choice-btn').forEach(btn => {
+    const god = GODS[operation][btn.dataset.value];
     btn.querySelector('.btn-icon').textContent  = god.icon;
     btn.querySelector('.btn-label').textContent = god.name;
   });
+}
+
+function updateDifficultyButtons() {
+  populateDiffButtons(els.difficultyGroup, state.operation);
 }
 
 function setActiveBtn(groupEl, value) {
@@ -200,14 +295,17 @@ function setActiveBtn(groupEl, value) {
   });
 }
 
+// =================== GAME ===================
+
 function showGame() {
+  closePendingModal();
   stopTimer();
   clearScoreCount();
   state.score = 0;
 
-  applyGodTheme(state.difficulty);
+  applyGodTheme(state.operation, state.difficulty);
   els.liveScore.textContent = '0';
-  els.liveBest.textContent = String(getHighScore(state.difficulty, state.timerMinutes));
+  els.liveBest.textContent = String(getHighScore(state.operation, state.difficulty, state.timerMinutes));
   els.feedback.textContent = '';
   els.feedback.className = 'feedback';
 
@@ -327,6 +425,8 @@ function showFeedback(text, type) {
   }, 800);
 }
 
+// =================== TIMER ===================
+
 function startTimer() {
   state.totalSeconds = state.timerMinutes * 60;
   state.secondsLeft = state.totalSeconds;
@@ -374,13 +474,13 @@ function updateTimerRing(isUrgent) {
   }
 }
 
+// =================== RESULTS ===================
+
 function showResults() {
   const god = GODS[state.operation][state.difficulty];
   const finalScore = state.score;
-  const prevBest = getHighScore(state.difficulty, state.timerMinutes);
+  const prevBest = getHighScore(state.operation, state.difficulty, state.timerMinutes);
   const isNewHS = finalScore > prevBest;
-
-  if (isNewHS) saveHighScore(state.difficulty, state.timerMinutes, finalScore);
 
   els.resultsGodIcon.textContent = god.icon;
   els.resultsMeta.textContent = `${god.name} \u00B7 ${state.timerMinutes} minute${state.timerMinutes > 1 ? 's' : ''}`;
@@ -393,8 +493,75 @@ function showResults() {
 
   if (isNewHS) {
     setTimeout(() => spawnConfetti(els.resultsConfetti, 20, RESULTS_CONFETTI_EMOJIS, true), 300);
+    // Show name modal after the score count finishes
+    const countDuration = Math.min(1200, finalScore * 80) + 600;
+    state.modalTimer = setTimeout(() => showNameModal(), countDuration);
   }
 }
+
+// =================== NAME MODAL ===================
+
+function showNameModal() {
+  els.nameInput.value = getLastName();
+  els.nameModal.classList.remove('hidden');
+  setTimeout(() => els.nameInput.focus(), 150);
+}
+
+function saveNameAndClose() {
+  const name = els.nameInput.value.trim() || 'Anonymous';
+  saveLastName(name);
+  addToLeaderboard(state.operation, state.difficulty, state.timerMinutes, state.score, name);
+  els.nameModal.classList.add('hidden');
+  updateHomeHighScore();
+}
+
+// =================== LEADERBOARD ===================
+
+function showLeaderboard(context) {
+  closePendingModal();
+  lbState.operation    = context.operation;
+  lbState.difficulty   = context.difficulty;
+  lbState.minutes      = context.minutes;
+  lbState.returnScreen = context.returnScreen || 'home';
+
+  setActiveBtn(els.lbOpGroup, lbState.operation);
+  setActiveBtn(els.lbDiffGroup, lbState.difficulty);
+  setActiveBtn(els.lbTimeGroup, String(lbState.minutes));
+  updateLbDiffButtons();
+  renderLeaderboard();
+  showScreen('leaderboard');
+}
+
+function updateLbDiffButtons() {
+  populateDiffButtons(els.lbDiffGroup, lbState.operation);
+  applyAccent(lbState.operation, lbState.difficulty);
+}
+
+function renderLeaderboard() {
+  const lb  = getLeaderboard(lbState.operation, lbState.difficulty, lbState.minutes);
+  const god = GODS[lbState.operation][lbState.difficulty];
+  const godLabel = `${god.icon} ${god.name} &middot; ${lbState.minutes} min`;
+
+  const rows = Array.from({ length: 3 }, (_, i) => {
+    const entry = lb[i];
+    if (entry) {
+      return `<div class="lb-entry${i === 0 ? ' lb-entry-top' : ''}">
+        <span class="lb-medal">${MEDALS[i]}</span>
+        <span class="lb-name">${escapeHtml(entry.name)}</span>
+        <span class="lb-score">${entry.score}</span>
+      </div>`;
+    }
+    return `<div class="lb-entry lb-entry-empty">
+      <span class="lb-medal">${MEDALS[i]}</span>
+      <span class="lb-name lb-name-empty">—</span>
+      <span class="lb-score lb-score-empty">—</span>
+    </div>`;
+  }).join('');
+
+  els.lbEntries.innerHTML = `<div class="lb-god-label">${godLabel}</div>${rows}`;
+}
+
+// =================== SCORE COUNT ANIMATION ===================
 
 function clearScoreCount() {
   if (state.scoreCountInterval) {
@@ -419,6 +586,8 @@ function animateScoreCount(to, el) {
   }, interval);
 }
 
+// =================== CONFETTI ===================
+
 function spawnConfetti(container, count, emojis, spread = false) {
   for (let i = 0; i < count; i++) {
     const el = document.createElement('span');
@@ -437,12 +606,15 @@ function spawnConfetti(container, count, emojis, spread = false) {
   }
 }
 
+// =================== EVENT LISTENERS ===================
+
+// Home
 els.difficultyGroup.addEventListener('click', e => {
   const btn = e.target.closest('.choice-btn');
   if (!btn) return;
   state.difficulty = btn.dataset.value;
   setActiveBtn(els.difficultyGroup, state.difficulty);
-  applyGodTheme(state.difficulty);
+  applyGodTheme(state.operation, state.difficulty);
   updateHomeHighScore();
 });
 
@@ -452,7 +624,7 @@ els.operationGroup.addEventListener('click', e => {
   state.operation = btn.dataset.value;
   setActiveBtn(els.operationGroup, state.operation);
   updateDifficultyButtons();
-  applyGodTheme(state.difficulty);
+  applyGodTheme(state.operation, state.difficulty);
   updateHomeHighScore();
 });
 
@@ -465,18 +637,72 @@ els.timerGroup.addEventListener('click', e => {
 });
 
 els.btnStart.addEventListener('click', showGame);
+els.btnLeaderboardHome.addEventListener('click', () => {
+  showLeaderboard({ operation: state.operation, difficulty: state.difficulty, minutes: state.timerMinutes, returnScreen: 'home' });
+});
+
+// Game
 els.answerInput.addEventListener('input', handleAnswerInput);
 els.numerInput.addEventListener('input', handleAnswerInput);
 els.denomInput.addEventListener('input', handleAnswerInput);
 els.btnSkip.addEventListener('click', handleSkip);
 els.btnExit.addEventListener('click', showHome);
+
+// Results
 els.btnPlayAgain.addEventListener('click', showGame);
 els.btnHome.addEventListener('click', showHome);
+els.btnLeaderboardResults.addEventListener('click', () => {
+  showLeaderboard({ operation: state.operation, difficulty: state.difficulty, minutes: state.timerMinutes, returnScreen: 'results' });
+});
+
+// Leaderboard
+els.lbOpGroup.addEventListener('click', e => {
+  const btn = e.target.closest('.choice-btn');
+  if (!btn) return;
+  lbState.operation = btn.dataset.value;
+  setActiveBtn(els.lbOpGroup, lbState.operation);
+  updateLbDiffButtons();
+  renderLeaderboard();
+});
+
+els.lbDiffGroup.addEventListener('click', e => {
+  const btn = e.target.closest('.choice-btn');
+  if (!btn) return;
+  lbState.difficulty = btn.dataset.value;
+  setActiveBtn(els.lbDiffGroup, lbState.difficulty);
+  updateLbDiffButtons();
+  renderLeaderboard();
+});
+
+els.lbTimeGroup.addEventListener('click', e => {
+  const btn = e.target.closest('.choice-btn');
+  if (!btn) return;
+  lbState.minutes = parseInt(btn.dataset.value, 10);
+  setActiveBtn(els.lbTimeGroup, btn.dataset.value);
+  renderLeaderboard();
+});
+
+els.btnLbBack.addEventListener('click', () => {
+  if (lbState.returnScreen === 'results') {
+    applyGodTheme(state.operation, state.difficulty);
+    showScreen('results');
+  } else {
+    showHome();
+  }
+});
+
+// Name modal
+els.btnSaveName.addEventListener('click', saveNameAndClose);
+els.nameInput.addEventListener('keydown', e => {
+  if (e.key === 'Enter') saveNameAndClose();
+});
+
+// =================== INIT ===================
 
 (function init() {
   els.ringFill.style.strokeDasharray = String(RING_CIRCUMFERENCE);
   els.ringFill.style.strokeDashoffset = '0';
-  applyGodTheme(state.difficulty);
+  applyGodTheme(state.operation, state.difficulty);
   syncActiveButtons();
   updateHomeHighScore();
 
