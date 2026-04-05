@@ -238,9 +238,14 @@ function generateProblem() {
       startTotalMins = randInt(minStart, maxStart);
     }
     const endTotalMins = startTotalMins + duration;
-    const name     = TIME_NAMES[randInt(0, TIME_NAMES.length - 1)];
-    const activity = TIME_ACTIVITIES[randInt(0, TIME_ACTIVITIES.length - 1)];
-    const wordProblem = `${name} started ${activity} at ${formatTime(startTotalMins)}. They finished at ${formatTime(endTotalMins)}. How many minutes passed?`;
+    let wordProblem;
+    if (randInt(0, TIME_NAMES.length) === 0) {
+      wordProblem = `Amber took Percy out for a walk. They left at ${formatTime(startTotalMins)} and got home at ${formatTime(endTotalMins)}. How many minutes were they gone?`;
+    } else {
+      const name     = TIME_NAMES[randInt(0, TIME_NAMES.length - 1)];
+      const activity = TIME_ACTIVITIES[randInt(0, TIME_ACTIVITIES.length - 1)];
+      wordProblem = `${name} started ${activity} at ${formatTime(startTotalMins)}. They finished at ${formatTime(endTotalMins)}. How many minutes passed?`;
+    }
     return { wordProblem, answer: duration, op: 'time' };
   }
 }
