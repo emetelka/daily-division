@@ -499,6 +499,15 @@ body::before {
   border-color: var(--text-muted);
 }
 
+/* Time word problem display */
+.word-problem {
+  font-size: 1.2rem;
+  line-height: 1.55;
+  text-align: center;
+  padding: 0.25rem 0.5rem;
+  color: var(--text);
+}
+
 /* Fraction problem display */
 .problem-text.fraction-layout {
   flex-direction: column;
@@ -747,6 +756,9 @@ body::before {
 }
 .keyboard-open .exit-btn {
   padding: 0.35rem;
+}
+.keyboard-open .word-problem {
+  font-size: 1rem;
 }
 .keyboard-open .feedback {
   font-size: 1.1rem;

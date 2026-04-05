@@ -16,6 +16,11 @@ const GODS = {
     medium: { name: 'Hephaestus', icon: '\u2692\ufe0f',  flavor: 'Forge with Hephaestus \u2014 precision is the craftsman\u2019s gift!', maxGcd: 5,  maxSimplified: 5,  accent: '#FF8C00' },
     hard:   { name: 'Hades',      icon: '\ud83d\udc80',  flavor: 'Enter Hades\u2019 domain \u2014 only the sharpest minds endure!',      maxGcd: 12, maxSimplified: 12, accent: '#9C27B0' },
   },
+  time: {
+    easy:   { name: 'Iris',    icon: '🌈', flavor: 'Race with Iris \u2014 every second of the rainbow counts!',     sameHour: true,  minMinutes: 5,  maxMinutes: 55, accent: '#26C6DA' },
+    medium: { name: 'Apollo',  icon: '☀️', flavor: 'Chart the sky with Apollo \u2014 the sun waits for no one!',   sameHour: false, minMinutes: 5,  maxMinutes: 60, accent: '#FFA726' },
+    hard:   { name: 'Chronos', icon: '⏳', flavor: 'Face Chronos \u2014 master of all time itself!',               sameHour: false, minMinutes: 61, maxMinutes: 180, accent: '#AB47BC' },
+  },
 };
 
 const RING_CIRCUMFERENCE = 2 * Math.PI * 42;
@@ -29,6 +34,13 @@ const ANIMATIONS = {
 const CONFETTI_EMOJIS         = ['⭐', '🌟', '✨', '💫', '🌠'];
 const RESULTS_CONFETTI_EMOJIS = ['⭐', '🌟', '✨', '💫', '🌠', '🎉', '🎊', '🏆'];
 const MEDALS                  = ['🥇', '🥈', '🥉'];
+
+const TIME_NAMES = ['Lucy', 'Sam', 'Maya', 'Jake', 'Emma', 'Noah', 'Sofia', 'Liam', 'Aria', 'Owen'];
+const TIME_ACTIVITIES = [
+  'homework', 'reading', 'drawing', 'practicing piano',
+  'playing video games', 'baking cookies', 'eating lunch',
+  'watching a movie', 'playing outside', 'painting',
+];
 
 const state = {
   difficulty:           'easy',
@@ -87,6 +99,7 @@ const els = {
   fractionAnswer:  document.getElementById('fraction-answer'),
   numerInput:      document.getElementById('numer-input'),
   denomInput:      document.getElementById('denom-input'),
+  wordProblem:     document.getElementById('word-problem'),
   btnSkip:         document.getElementById('btn-skip'),
   btnExit:         document.getElementById('btn-exit'),
   feedback:        document.getElementById('feedback'),
@@ -173,6 +186,14 @@ function gcd(a, b) {
   return b === 0 ? a : gcd(b, a % b);
 }
 
+function formatTime(totalMins) {
+  const h = Math.floor(totalMins / 60) % 24;
+  const m = totalMins % 60;
+  const ampm = h < 12 ? 'AM' : 'PM';
+  const h12 = h % 12 || 12;
+  return `${h12}:${String(m).padStart(2, '0')} ${ampm}`;
+}
+
 function escapeHtml(str) {
   return String(str)
     .replace(/&/g, '&amp;')
@@ -193,7 +214,7 @@ function generateProblem() {
     const a = randInt(1, cfg.maxFactor);
     const b = randInt(1, cfg.maxFactor);
     return { a, b, answer: a * b, op: '\u00d7' };
-  } else {
+  } else if (state.operation === 'fraction') {
     let simplNum, simplDenom, factor;
     do {
       factor     = randInt(2, cfg.maxGcd);
@@ -202,6 +223,25 @@ function generateProblem() {
     } while (simplNum === simplDenom || gcd(simplNum, simplDenom) !== 1 || (cfg.properOnly && simplNum > simplDenom));
     return { a: simplNum * factor, b: simplDenom * factor,
              answerNum: simplNum, answerDenom: simplDenom, op: 'fraction' };
+  } else {
+    // time
+    const duration = randInt(cfg.minMinutes, cfg.maxMinutes);
+    let startTotalMins;
+    if (cfg.sameHour) {
+      const hour = randInt(8, 20);
+      const startMin = randInt(0, 59 - duration);
+      startTotalMins = hour * 60 + startMin;
+    } else {
+      // start between 8 AM and 8 PM, end before midnight
+      const minStart = 8 * 60;
+      const maxStart = Math.min(20 * 60, 23 * 60 - duration);
+      startTotalMins = randInt(minStart, maxStart);
+    }
+    const endTotalMins = startTotalMins + duration;
+    const name     = TIME_NAMES[randInt(0, TIME_NAMES.length - 1)];
+    const activity = TIME_ACTIVITIES[randInt(0, TIME_ACTIVITIES.length - 1)];
+    const wordProblem = `${name} started ${activity} at ${formatTime(startTotalMins)}. They finished at ${formatTime(endTotalMins)}. How many minutes passed?`;
+    return { wordProblem, answer: duration, op: 'time' };
   }
 }
 
@@ -318,26 +358,37 @@ function showGame() {
 }
 
 function loadNextProblem(animate = true) {
-  const { a, b, answer, answerNum, answerDenom, op } = generateProblem();
+  const { a, b, answer, answerNum, answerDenom, wordProblem, op } = generateProblem();
   state.currentAnswer      = answer      ?? null;
   state.currentAnswerNum   = answerNum   ?? null;
   state.currentAnswerDenom = answerDenom ?? null;
 
-  els.dividend.textContent = String(a);
-  els.divisor.textContent  = String(b);
-
   const isFraction = (op === 'fraction');
-  els.problemText.classList.toggle('fraction-layout', isFraction);
-  els.answerInput.classList.toggle('hidden', isFraction);
-  els.fractionAnswer.classList.toggle('hidden', !isFraction);
+  const isTime     = (op === 'time');
 
-  if (isFraction) {
-    els.problemOp.textContent = '';
-    els.numerInput.value  = '';
-    els.denomInput.value  = '';
-  } else {
-    els.problemOp.textContent = op;
+  els.problemText.classList.toggle('hidden', isTime);
+  els.wordProblem.classList.toggle('hidden', !isTime);
+
+  if (isTime) {
+    els.wordProblem.textContent = wordProblem;
+    els.answerInput.classList.remove('hidden');
+    els.fractionAnswer.classList.add('hidden');
     els.answerInput.value = '';
+  } else {
+    els.dividend.textContent = String(a);
+    els.divisor.textContent  = String(b);
+    els.problemText.classList.toggle('fraction-layout', isFraction);
+    els.answerInput.classList.toggle('hidden', isFraction);
+    els.fractionAnswer.classList.toggle('hidden', !isFraction);
+
+    if (isFraction) {
+      els.problemOp.textContent = '';
+      els.numerInput.value  = '';
+      els.denomInput.value  = '';
+    } else {
+      els.problemOp.textContent = op;
+      els.answerInput.value = '';
+    }
   }
 
   if (animate) {
@@ -541,28 +592,41 @@ function updateLbDiffButtons() {
   applyAccent(lbState.operation, lbState.difficulty);
 }
 
+function makeLbRow(medal, name, score, extraClass) {
+  const row = document.createElement('div');
+  row.className = 'lb-entry' + (extraClass ? ' ' + extraClass : '');
+  const medalEl = document.createElement('span');
+  medalEl.className = 'lb-medal';
+  medalEl.textContent = medal;
+  const nameEl = document.createElement('span');
+  nameEl.className = 'lb-name' + (name === null ? ' lb-name-empty' : '');
+  nameEl.textContent = name !== null ? name : '—';
+  const scoreEl = document.createElement('span');
+  scoreEl.className = 'lb-score' + (score === null ? ' lb-score-empty' : '');
+  scoreEl.textContent = score !== null ? String(score) : '—';
+  row.append(medalEl, nameEl, scoreEl);
+  return row;
+}
+
 function renderLeaderboard() {
   const lb  = getLeaderboard(lbState.operation, lbState.difficulty, lbState.minutes);
   const god = GODS[lbState.operation][lbState.difficulty];
-  const godLabel = `${god.icon} ${god.name} &middot; ${lbState.minutes} min`;
 
-  const rows = Array.from({ length: 3 }, (_, i) => {
+  els.lbEntries.textContent = '';
+
+  const label = document.createElement('div');
+  label.className = 'lb-god-label';
+  label.textContent = `${god.icon} ${god.name} · ${lbState.minutes} min`;
+  els.lbEntries.appendChild(label);
+
+  for (let i = 0; i < 3; i++) {
     const entry = lb[i];
     if (entry) {
-      return `<div class="lb-entry${i === 0 ? ' lb-entry-top' : ''}">
-        <span class="lb-medal">${MEDALS[i]}</span>
-        <span class="lb-name">${escapeHtml(entry.name)}</span>
-        <span class="lb-score">${entry.score}</span>
-      </div>`;
+      els.lbEntries.appendChild(makeLbRow(MEDALS[i], entry.name, entry.score, i === 0 ? 'lb-entry-top' : ''));
+    } else {
+      els.lbEntries.appendChild(makeLbRow(MEDALS[i], null, null, 'lb-entry-empty'));
     }
-    return `<div class="lb-entry lb-entry-empty">
-      <span class="lb-medal">${MEDALS[i]}</span>
-      <span class="lb-name lb-name-empty">—</span>
-      <span class="lb-score lb-score-empty">—</span>
-    </div>`;
-  }).join('');
-
-  els.lbEntries.innerHTML = `<div class="lb-god-label">${godLabel}</div>${rows}`;
+  }
 }
 
 // =================== SCORE COUNT ANIMATION ===================
