@@ -35,7 +35,7 @@ const CONFETTI_EMOJIS         = ['⭐', '🌟', '✨', '💫', '🌠'];
 const RESULTS_CONFETTI_EMOJIS = ['⭐', '🌟', '✨', '💫', '🌠', '🎉', '🎊', '🏆'];
 const MEDALS                  = ['🥇', '🥈', '🥉'];
 
-const TIME_NAMES = ['Lucy', 'Sam', 'Maya', 'Jake', 'Emma', 'Noah', 'Sofia', 'Liam', 'Aria', 'Owen'];
+const TIME_NAMES = ['Lucy', 'Abram', 'Nikolai', 'Roman', 'Luella', 'Nora', 'Theo', 'Lil', 'Frankie', 'John', 'Tomi', 'Elijah'];
 const TIME_ACTIVITIES = [
   'homework', 'reading', 'drawing', 'practicing piano',
   'playing video games', 'baking cookies', 'eating lunch',
