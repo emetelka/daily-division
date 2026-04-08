@@ -21,6 +21,11 @@ const GODS = {
     medium: { name: 'Apollo',  icon: '☀️', flavor: 'Chart the sky with Apollo \u2014 the sun waits for no one!',   sameHour: false, minMinutes: 5,  maxMinutes: 60, accent: '#FFA726' },
     hard:   { name: 'Chronos', icon: '⏳', flavor: 'Face Chronos \u2014 master of all time itself!',               sameHour: false, minMinutes: 61, maxMinutes: 180, accent: '#AB47BC' },
   },
+  squareroot: {
+    easy:   { name: 'Selene', icon: '🌙', flavor: 'Let moonlight show you the root!',             maxRoot: 10, accent: '#A8C0E0' },
+    medium: { name: 'Helios', icon: '☀️', flavor: 'Helios illuminates every perfect square!',     maxRoot: 15, accent: '#F0A820' },
+    hard:   { name: 'Gaea',   icon: '🌍', flavor: 'Gaea, root of all creation \u2014 prove yourself!', maxRoot: 20, accent: '#5A8A4A' },
+  },
 };
 
 const RING_CIRCUMFERENCE = 2 * Math.PI * 42;
@@ -223,6 +228,9 @@ function generateProblem() {
     } while (simplNum === simplDenom || gcd(simplNum, simplDenom) !== 1 || (cfg.properOnly && simplNum > simplDenom));
     return { a: simplNum * factor, b: simplDenom * factor,
              answerNum: simplNum, answerDenom: simplDenom, op: 'fraction' };
+  } else if (state.operation === 'squareroot') {
+    const answer = randInt(1, cfg.maxRoot);
+    return { a: answer * answer, answer, op: '\u221a' };
   } else {
     // time
     const duration = randInt(cfg.minMinutes, cfg.maxMinutes);
@@ -368,8 +376,9 @@ function loadNextProblem(animate = true) {
   state.currentAnswerNum   = answerNum   ?? null;
   state.currentAnswerDenom = answerDenom ?? null;
 
-  const isFraction = (op === 'fraction');
-  const isTime     = (op === 'time');
+  const isFraction   = (op === 'fraction');
+  const isTime       = (op === 'time');
+  const isSquareRoot = (op === '\u221a');
 
   els.problemText.classList.toggle('hidden', isTime);
   els.wordProblem.classList.toggle('hidden', !isTime);
@@ -380,8 +389,8 @@ function loadNextProblem(animate = true) {
     els.fractionAnswer.classList.add('hidden');
     els.answerInput.value = '';
   } else {
-    els.dividend.textContent = String(a);
-    els.divisor.textContent  = String(b);
+    els.dividend.textContent = isSquareRoot ? ('\u221a' + String(a)) : String(a);
+    els.divisor.textContent  = isSquareRoot ? '' : String(b);
     els.problemText.classList.toggle('fraction-layout', isFraction);
     els.answerInput.classList.toggle('hidden', isFraction);
     els.fractionAnswer.classList.toggle('hidden', !isFraction);
@@ -391,7 +400,7 @@ function loadNextProblem(animate = true) {
       els.numerInput.value  = '';
       els.denomInput.value  = '';
     } else {
-      els.problemOp.textContent = op;
+      els.problemOp.textContent = isSquareRoot ? '' : op;
       els.answerInput.value = '';
     }
   }
