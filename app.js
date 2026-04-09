@@ -27,9 +27,9 @@ const GODS = {
     hard:   { name: 'Gaea',   icon: '🌍', flavor: 'Gaea, root of all creation \u2014 prove yourself!', maxRoot: 20, accent: '#5A8A4A' },
   },
   numberline: {
-    easy:   { name: 'Hestia', icon: '🔥', flavor: "Find your place by Hestia's hearth!",            denominators: [2],    windowSize: 4, accent: '#E8784A' },
-    medium: { name: 'Tyche',  icon: '🎯', flavor: 'Fortune favors the precise!',                    denominators: [3, 4], windowSize: 3, accent: '#2EC4B6' },
-    hard:   { name: 'Kairos', icon: '\u23f1\ufe0f', flavor: 'Kairos: the perfect moment, the perfect point!', denominators: [5, 6], windowSize: 2, accent: '#C84874' },
+    easy:   { name: 'Hestia', icon: '🔥', flavor: "Find your place by Hestia's hearth!",            denominators: [2],    windowSize: 2, maxValue:  2, accent: '#E8784A' },
+    medium: { name: 'Tyche',  icon: '🎯', flavor: 'Fortune favors the precise!',                    denominators: [3, 4], windowSize: 3, maxValue:  6, accent: '#2EC4B6' },
+    hard:   { name: 'Kairos', icon: '\u23f1\ufe0f', flavor: 'Kairos: the perfect moment, the perfect point!', denominators: [5, 6], windowSize: 2, maxValue: 10, accent: '#C84874' },
   },
 };
 
@@ -242,9 +242,9 @@ function generateProblem() {
     return { a: answer * answer, answer, op: '\u221a' };
   } else if (state.operation === 'numberline') {
     const denom      = cfg.denominators[randInt(0, cfg.denominators.length - 1)];
-    const numer      = randInt(1, 10 * denom - 1);
+    const numer      = randInt(1, cfg.maxValue * denom - 1);
     const idealStart = Math.round(numer / denom) - Math.floor(cfg.windowSize / 2);
-    const winStart   = Math.max(0, Math.min(10 - cfg.windowSize, idealStart));
+    const winStart   = Math.max(0, Math.min(cfg.maxValue - cfg.windowSize, idealStart));
     const winEnd     = winStart + cfg.windowSize;
     const answerIdx  = numer - winStart * denom;
     return { a: numer, b: denom, answer: answerIdx, nlWinStart: winStart, nlWinEnd: winEnd, op: 'numberline' };
@@ -304,8 +304,8 @@ function renderNumberLine(numer, denom, winStart, winEnd) {
 
     // Tick line (taller for integers)
     const tick = document.createElementNS(SVG_NS,'line');
-    tick.setAttribute('x1', x); tick.setAttribute('y1', Y - (isInteger ? 10 : 6));
-    tick.setAttribute('x2', x); tick.setAttribute('y2', Y + (isInteger ? 10 : 6));
+    tick.setAttribute('x1', x); tick.setAttribute('y1', Y - (isInteger ? 13 : 9));
+    tick.setAttribute('x2', x); tick.setAttribute('y2', Y + (isInteger ? 13 : 9));
     tick.setAttribute('stroke', isInteger ? 'var(--text)' : 'var(--card-border)');
     tick.setAttribute('stroke-width', isInteger ? '2' : '1.5');
     svg.appendChild(tick);
@@ -320,10 +320,10 @@ function renderNumberLine(numer, denom, winStart, winEnd) {
     } else {
       // Integer label below the axis
       const label = document.createElementNS(SVG_NS,'text');
-      label.setAttribute('x', x); label.setAttribute('y', Y + 26);
+      label.setAttribute('x', x); label.setAttribute('y', Y + 32);
       label.setAttribute('text-anchor', 'middle');
-      label.setAttribute('fill', 'var(--text-muted)');
-      label.setAttribute('font-size', '15');
+      label.setAttribute('fill', 'var(--text)');
+      label.setAttribute('font-size', '20');
       label.setAttribute('font-family', 'inherit');
       label.textContent = String(Math.round(intVal));
       svg.appendChild(label);
