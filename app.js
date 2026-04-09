@@ -34,6 +34,8 @@ const GODS = {
 };
 
 const RING_CIRCUMFERENCE = 2 * Math.PI * 42;
+const SVG_NS             = 'http://www.w3.org/2000/svg';
+const ERROR_COLOR        = '#E63946';
 
 const ANIMATIONS = {
   slideIn:      'slideInRight 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) both',
@@ -239,17 +241,11 @@ function generateProblem() {
     const answer = randInt(1, cfg.maxRoot);
     return { a: answer * answer, answer, op: '\u221a' };
   } else if (state.operation === 'numberline') {
-    const denom    = cfg.denominators[randInt(0, cfg.denominators.length - 1)];
-    const maxNumer = 10 * denom;
-    // Exclude exact endpoints (0 and 10); allow whole-number values (numer % denom === 0)
-    const numer    = randInt(1, maxNumer - 1);
-    // Compute sliding window: keep value roughly centered, clamped to [0, 10]
-    const value     = numer / denom;
-    const winSize   = cfg.windowSize;
-    const idealStart = Math.round(value) - Math.floor(winSize / 2);
-    const winStart   = Math.max(0, Math.min(10 - winSize, idealStart));
-    const winEnd     = winStart + winSize;
-    // Answer is the tick index within the window
+    const denom      = cfg.denominators[randInt(0, cfg.denominators.length - 1)];
+    const numer      = randInt(1, 10 * denom - 1);
+    const idealStart = Math.round(numer / denom) - Math.floor(cfg.windowSize / 2);
+    const winStart   = Math.max(0, Math.min(10 - cfg.windowSize, idealStart));
+    const winEnd     = winStart + cfg.windowSize;
     const answerIdx  = numer - winStart * denom;
     return { a: numer, b: denom, answer: answerIdx, nlWinStart: winStart, nlWinEnd: winEnd, op: 'numberline' };
   } else {
@@ -285,7 +281,6 @@ function renderNumberLine(numer, denom, winStart, winEnd) {
   const svg = els.numberlineSvg;
   svg.innerHTML = '';
 
-  const NS      = 'http://www.w3.org/2000/svg';
   const LEFT    = 24, RIGHT = 376, W = RIGHT - LEFT;
   const Y       = 44;
   const winSize = winEnd - winStart;
@@ -295,7 +290,7 @@ function renderNumberLine(numer, denom, winStart, winEnd) {
   const accent     = GODS[state.operation][state.difficulty].accent;
 
   // Axis line
-  const axis = document.createElementNS(NS, 'line');
+  const axis = document.createElementNS(SVG_NS,'line');
   axis.setAttribute('x1', LEFT);  axis.setAttribute('y1', Y);
   axis.setAttribute('x2', RIGHT); axis.setAttribute('y2', Y);
   axis.setAttribute('stroke', 'var(--card-border)');
@@ -308,7 +303,7 @@ function renderNumberLine(numer, denom, winStart, winEnd) {
     const intVal     = winStart + i / denom;   // actual numeric value at this tick
 
     // Tick line (taller for integers)
-    const tick = document.createElementNS(NS, 'line');
+    const tick = document.createElementNS(SVG_NS,'line');
     tick.setAttribute('x1', x); tick.setAttribute('y1', Y - (isInteger ? 10 : 6));
     tick.setAttribute('x2', x); tick.setAttribute('y2', Y + (isInteger ? 10 : 6));
     tick.setAttribute('stroke', isInteger ? 'var(--text)' : 'var(--card-border)');
@@ -317,14 +312,14 @@ function renderNumberLine(numer, denom, winStart, winEnd) {
 
     // Visual dot (only on non-integer ticks — integer positions get the tick line)
     if (!isInteger) {
-      const dot = document.createElementNS(NS, 'circle');
+      const dot = document.createElementNS(SVG_NS,'circle');
       dot.setAttribute('cx', x); dot.setAttribute('cy', Y); dot.setAttribute('r', '4');
       dot.setAttribute('fill', 'var(--card-border)');
       dot.setAttribute('id', `nl-dot-${i}`);
       svg.appendChild(dot);
     } else {
       // Integer label below the axis
-      const label = document.createElementNS(NS, 'text');
+      const label = document.createElementNS(SVG_NS,'text');
       label.setAttribute('x', x); label.setAttribute('y', Y + 26);
       label.setAttribute('text-anchor', 'middle');
       label.setAttribute('fill', 'var(--text-muted)');
@@ -333,7 +328,7 @@ function renderNumberLine(numer, denom, winStart, winEnd) {
       label.textContent = String(Math.round(intVal));
       svg.appendChild(label);
       // Dot for integer positions too
-      const dot = document.createElementNS(NS, 'circle');
+      const dot = document.createElementNS(SVG_NS,'circle');
       dot.setAttribute('cx', x); dot.setAttribute('cy', Y); dot.setAttribute('r', '5');
       dot.setAttribute('fill', 'var(--text-muted)');
       dot.setAttribute('id', `nl-dot-${i}`);
@@ -341,7 +336,7 @@ function renderNumberLine(numer, denom, winStart, winEnd) {
     }
 
     // Invisible hit target
-    const hit = document.createElementNS(NS, 'circle');
+    const hit = document.createElementNS(SVG_NS,'circle');
     hit.setAttribute('cx', x); hit.setAttribute('cy', Y);
     hit.setAttribute('r', String(hitR));
     hit.setAttribute('fill', 'transparent');
@@ -361,7 +356,7 @@ function handleNumberLineClick(index, accent) {
   } else {
     if (!dot) return;
     const prev = dot.getAttribute('fill');
-    dot.setAttribute('fill', '#E63946');
+    dot.setAttribute('fill', ERROR_COLOR);
     setTimeout(() => dot.setAttribute('fill', prev), 400);
   }
 }
