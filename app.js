@@ -27,8 +27,8 @@ const GODS = {
     hard:   { name: 'Gaea',   icon: '🌍', flavor: 'Gaea, root of all creation \u2014 prove yourself!', maxRoot: 20, accent: '#5A8A4A' },
   },
   numberline: {
-    easy:   { name: 'Hestia', icon: '🔥', flavor: "Find your place by Hestia's hearth!",            denominators: [2],    windowSize: 2, maxValue:  2, accent: '#E8784A' },
-    medium: { name: 'Tyche',  icon: '🎯', flavor: 'Fortune favors the precise!',                    denominators: [3, 4], windowSize: 3, maxValue:  6, accent: '#2EC4B6' },
+    easy:   { name: 'Hestia', icon: '🔥', flavor: "Find your place by Hestia's hearth!",            denominators: [2, 3, 4], windowSize: 2, maxValue:  2, accent: '#E8784A' },
+    medium: { name: 'Tyche',  icon: '🎯', flavor: 'Fortune favors the precise!',                    denominators: [4, 5],    windowSize: 2, maxValue:  6, accent: '#2EC4B6' },
     hard:   { name: 'Kairos', icon: '\u23f1\ufe0f', flavor: 'Kairos: the perfect moment, the perfect point!', denominators: [5, 6], windowSize: 2, maxValue: 10, accent: '#C84874' },
   },
 };
@@ -306,15 +306,15 @@ function renderNumberLine(numer, denom, winStart, winEnd) {
     const tick = document.createElementNS(SVG_NS,'line');
     tick.setAttribute('x1', x); tick.setAttribute('y1', Y - (isInteger ? 13 : 9));
     tick.setAttribute('x2', x); tick.setAttribute('y2', Y + (isInteger ? 13 : 9));
-    tick.setAttribute('stroke', isInteger ? 'var(--text)' : 'var(--card-border)');
-    tick.setAttribute('stroke-width', isInteger ? '2' : '1.5');
+    tick.setAttribute('stroke', isInteger ? 'var(--text)' : 'var(--text-muted)');
+    tick.setAttribute('stroke-width', isInteger ? '2' : '2');
     svg.appendChild(tick);
 
     // Visual dot (only on non-integer ticks — integer positions get the tick line)
     if (!isInteger) {
       const dot = document.createElementNS(SVG_NS,'circle');
       dot.setAttribute('cx', x); dot.setAttribute('cy', Y); dot.setAttribute('r', '4');
-      dot.setAttribute('fill', 'var(--card-border)');
+      dot.setAttribute('fill', 'var(--text-muted)');
       dot.setAttribute('id', `nl-dot-${i}`);
       svg.appendChild(dot);
     } else {
