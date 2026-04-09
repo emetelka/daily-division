@@ -47,6 +47,10 @@
           <span class="btn-icon">√</span>
           <span class="btn-label">Sq. Root</span>
         </button>
+        <button class="choice-btn" data-value="numberline">
+          <span class="btn-icon">📏</span>
+          <span class="btn-label">Num. Line</span>
+        </button>
       </div>
     </section>
 
@@ -147,6 +151,11 @@
                  inputmode="numeric" pattern="[0-9]*" placeholder="?"
                  autocomplete="off" autocorrect="off" min="1" max="999">
         </div>
+        <div class="numberline-container hidden" id="numberline-container">
+          <svg class="numberline-svg" id="numberline-svg"
+               viewBox="0 0 400 75" xmlns="http://www.w3.org/2000/svg"
+               aria-label="Number line"></svg>
+        </div>
       </div>
     </div>
 
@@ -210,6 +219,10 @@
         <button class="choice-btn" data-value="squareroot">
           <span class="btn-icon">√</span>
           <span class="btn-label">Sq. Root</span>
+        </button>
+        <button class="choice-btn" data-value="numberline">
+          <span class="btn-icon">📏</span>
+          <span class="btn-label">Num. Line</span>
         </button>
       </div>
     </section>

@@ -546,6 +546,19 @@ body::before {
   transition: background 0.4s;
 }
 
+/* Number line */
+.numberline-container {
+  width: 100%;
+  padding: 0.5rem 0 0.25rem;
+}
+.numberline-svg {
+  width: 100%;
+  height: auto;
+  overflow: visible;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
 /* Input error state */
 .answer-input.input-error {
   border-color: var(--wrong) !important;

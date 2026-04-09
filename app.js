@@ -26,6 +26,11 @@ const GODS = {
     medium: { name: 'Helios', icon: '☀️', flavor: 'Helios illuminates every perfect square!',     maxRoot: 15, accent: '#F0A820' },
     hard:   { name: 'Gaea',   icon: '🌍', flavor: 'Gaea, root of all creation \u2014 prove yourself!', maxRoot: 20, accent: '#5A8A4A' },
   },
+  numberline: {
+    easy:   { name: 'Hestia', icon: '🔥', flavor: "Find your place by Hestia's hearth!",            denominators: [2],    windowSize: 4, accent: '#E8784A' },
+    medium: { name: 'Tyche',  icon: '🎯', flavor: 'Fortune favors the precise!',                    denominators: [3, 4], windowSize: 3, accent: '#2EC4B6' },
+    hard:   { name: 'Kairos', icon: '\u23f1\ufe0f', flavor: 'Kairos: the perfect moment, the perfect point!', denominators: [5, 6], windowSize: 2, accent: '#C84874' },
+  },
 };
 
 const RING_CIRCUMFERENCE = 2 * Math.PI * 42;
@@ -108,7 +113,9 @@ const els = {
   btnSkip:         document.getElementById('btn-skip'),
   btnExit:         document.getElementById('btn-exit'),
   feedback:        document.getElementById('feedback'),
-  confettiLayer:   document.getElementById('confetti-layer'),
+  confettiLayer:        document.getElementById('confetti-layer'),
+  numberlineContainer:  document.getElementById('numberline-container'),
+  numberlineSvg:        document.getElementById('numberline-svg'),
 
   // results
   resultsGodIcon:        document.getElementById('results-god-icon'),
@@ -231,6 +238,20 @@ function generateProblem() {
   } else if (state.operation === 'squareroot') {
     const answer = randInt(1, cfg.maxRoot);
     return { a: answer * answer, answer, op: '\u221a' };
+  } else if (state.operation === 'numberline') {
+    const denom    = cfg.denominators[randInt(0, cfg.denominators.length - 1)];
+    const maxNumer = 10 * denom;
+    // Exclude exact endpoints (0 and 10); allow whole-number values (numer % denom === 0)
+    const numer    = randInt(1, maxNumer - 1);
+    // Compute sliding window: keep value roughly centered, clamped to [0, 10]
+    const value     = numer / denom;
+    const winSize   = cfg.windowSize;
+    const idealStart = Math.round(value) - Math.floor(winSize / 2);
+    const winStart   = Math.max(0, Math.min(10 - winSize, idealStart));
+    const winEnd     = winStart + winSize;
+    // Answer is the tick index within the window
+    const answerIdx  = numer - winStart * denom;
+    return { a: numer, b: denom, answer: answerIdx, nlWinStart: winStart, nlWinEnd: winEnd, op: 'numberline' };
   } else {
     // time
     const duration = randInt(cfg.minMinutes, cfg.maxMinutes);
@@ -255,6 +276,93 @@ function generateProblem() {
       wordProblem = `${name} started ${activity} at ${formatTime(startTotalMins)}. They finished at ${formatTime(endTotalMins)}. How many minutes passed?`;
     }
     return { wordProblem, answer: duration, op: 'time' };
+  }
+}
+
+// =================== NUMBER LINE ===================
+
+function renderNumberLine(numer, denom, winStart, winEnd) {
+  const svg = els.numberlineSvg;
+  svg.innerHTML = '';
+
+  const NS      = 'http://www.w3.org/2000/svg';
+  const LEFT    = 24, RIGHT = 376, W = RIGHT - LEFT;
+  const Y       = 44;
+  const winSize = winEnd - winStart;
+  const totalTicks = winSize * denom;          // number of intervals (ticks = totalTicks + 1)
+  const spacing    = W / totalTicks;
+  const hitR       = Math.min(20, spacing * 0.46);  // scale hit target to spacing
+  const accent     = GODS[state.operation][state.difficulty].accent;
+
+  // Axis line
+  const axis = document.createElementNS(NS, 'line');
+  axis.setAttribute('x1', LEFT);  axis.setAttribute('y1', Y);
+  axis.setAttribute('x2', RIGHT); axis.setAttribute('y2', Y);
+  axis.setAttribute('stroke', 'var(--card-border)');
+  axis.setAttribute('stroke-width', '2');
+  svg.appendChild(axis);
+
+  for (let i = 0; i <= totalTicks; i++) {
+    const x          = LEFT + spacing * i;
+    const isInteger  = (i % denom === 0);
+    const intVal     = winStart + i / denom;   // actual numeric value at this tick
+
+    // Tick line (taller for integers)
+    const tick = document.createElementNS(NS, 'line');
+    tick.setAttribute('x1', x); tick.setAttribute('y1', Y - (isInteger ? 10 : 6));
+    tick.setAttribute('x2', x); tick.setAttribute('y2', Y + (isInteger ? 10 : 6));
+    tick.setAttribute('stroke', isInteger ? 'var(--text)' : 'var(--card-border)');
+    tick.setAttribute('stroke-width', isInteger ? '2' : '1.5');
+    svg.appendChild(tick);
+
+    // Visual dot (only on non-integer ticks — integer positions get the tick line)
+    if (!isInteger) {
+      const dot = document.createElementNS(NS, 'circle');
+      dot.setAttribute('cx', x); dot.setAttribute('cy', Y); dot.setAttribute('r', '4');
+      dot.setAttribute('fill', 'var(--card-border)');
+      dot.setAttribute('id', `nl-dot-${i}`);
+      svg.appendChild(dot);
+    } else {
+      // Integer label below the axis
+      const label = document.createElementNS(NS, 'text');
+      label.setAttribute('x', x); label.setAttribute('y', Y + 26);
+      label.setAttribute('text-anchor', 'middle');
+      label.setAttribute('fill', 'var(--text-muted)');
+      label.setAttribute('font-size', '15');
+      label.setAttribute('font-family', 'inherit');
+      label.textContent = String(Math.round(intVal));
+      svg.appendChild(label);
+      // Dot for integer positions too
+      const dot = document.createElementNS(NS, 'circle');
+      dot.setAttribute('cx', x); dot.setAttribute('cy', Y); dot.setAttribute('r', '5');
+      dot.setAttribute('fill', 'var(--text-muted)');
+      dot.setAttribute('id', `nl-dot-${i}`);
+      svg.appendChild(dot);
+    }
+
+    // Invisible hit target
+    const hit = document.createElementNS(NS, 'circle');
+    hit.setAttribute('cx', x); hit.setAttribute('cy', Y);
+    hit.setAttribute('r', String(hitR));
+    hit.setAttribute('fill', 'transparent');
+    hit.setAttribute('style', 'cursor: pointer; touch-action: manipulation;');
+    hit.addEventListener('click', () => handleNumberLineClick(i, accent));
+    svg.appendChild(hit);
+  }
+}
+
+function handleNumberLineClick(index, accent) {
+  if (state.advancing) return;
+  const dot = els.numberlineSvg.querySelector(`#nl-dot-${index}`);
+  if (index === state.currentAnswer) {
+    if (dot) dot.setAttribute('fill', accent);
+    state.advancing = true;
+    onCorrectAnswer();
+  } else {
+    if (!dot) return;
+    const prev = dot.getAttribute('fill');
+    dot.setAttribute('fill', '#E63946');
+    setTimeout(() => dot.setAttribute('fill', prev), 400);
   }
 }
 
@@ -371,7 +479,7 @@ function showGame() {
 }
 
 function loadNextProblem(animate = true) {
-  const { a, b, answer, answerNum, answerDenom, wordProblem, op } = generateProblem();
+  const { a, b, answer, answerNum, answerDenom, wordProblem, nlWinStart, nlWinEnd, op } = generateProblem();
   state.currentAnswer      = answer      ?? null;
   state.currentAnswerNum   = answerNum   ?? null;
   state.currentAnswerDenom = answerDenom ?? null;
@@ -379,15 +487,27 @@ function loadNextProblem(animate = true) {
   const isFraction   = (op === 'fraction');
   const isTime       = (op === 'time');
   const isSquareRoot = (op === '\u221a');
+  const isNumberLine = (op === 'numberline');
 
-  els.problemText.classList.toggle('hidden', isTime);
+  els.problemText.classList.toggle('hidden', isTime || isNumberLine);
   els.wordProblem.classList.toggle('hidden', !isTime);
+  els.numberlineContainer.classList.toggle('hidden', !isNumberLine);
 
   if (isTime) {
     els.wordProblem.textContent = wordProblem;
     els.answerInput.classList.remove('hidden');
     els.fractionAnswer.classList.add('hidden');
     els.answerInput.value = '';
+  } else if (isNumberLine) {
+    // Show fraction as stacked display above the line, reuse fraction-layout CSS
+    els.dividend.textContent = String(a);
+    els.divisor.textContent  = String(b);
+    els.problemOp.textContent = '';
+    els.problemText.classList.add('fraction-layout');
+    els.problemText.classList.remove('hidden');
+    els.answerInput.classList.add('hidden');
+    els.fractionAnswer.classList.add('hidden');
+    renderNumberLine(a, b, nlWinStart, nlWinEnd);
   } else {
     els.dividend.textContent = isSquareRoot ? ('\u221a' + String(a)) : String(a);
     els.divisor.textContent  = isSquareRoot ? '' : String(b);
@@ -409,9 +529,11 @@ function loadNextProblem(animate = true) {
     triggerCardAnimation(ANIMATIONS.slideIn);
   }
 
-  // Delay keeps the iPad keyboard open between problems
+  // Delay keeps the iPad keyboard open between problems; skip focus for number line (no keyboard)
   setTimeout(() => {
-    (isFraction ? els.numerInput : els.answerInput).focus();
+    if (!isNumberLine) {
+      (isFraction ? els.numerInput : els.answerInput).focus();
+    }
     state.advancing = false;
   }, 50);
 }
