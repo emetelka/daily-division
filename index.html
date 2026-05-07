@@ -42,6 +42,12 @@
 
     await myStatsigClient.initializeAsync();
     window.statsigClient = myStatsigClient;
+
+    if (!myStatsigClient.checkGate("fraction_mode")) {
+      document
+        .querySelectorAll('button.choice-btn[data-value="fraction"]')
+        .forEach((btn) => btn.remove());
+    }
   </script>
 </head>
 <body>
