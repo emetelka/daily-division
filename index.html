@@ -9,9 +9,18 @@
   <script type="importmap">
   {
     "imports": {
-      "@statsig/js-client": "https://cdn.jsdelivr.net/npm/@statsig/js-client@3/+esm",
-      "@statsig/session-replay": "https://cdn.jsdelivr.net/npm/@statsig/session-replay@3/+esm",
-      "@statsig/web-analytics": "https://cdn.jsdelivr.net/npm/@statsig/web-analytics@3/+esm"
+      "@statsig/js-client": "https://ga.jspm.io/npm:@statsig/js-client@3.33.0/src/index.js",
+      "@statsig/session-replay": "https://ga.jspm.io/npm:@statsig/session-replay@3.33.0/src/index.js",
+      "@statsig/web-analytics": "https://ga.jspm.io/npm:@statsig/web-analytics@3.33.0/src/index.js"
+    },
+    "scopes": {
+      "https://ga.jspm.io/": {
+        "@rrweb/record": "https://ga.jspm.io/npm:@rrweb/record@2.0.0-alpha.17/dist/record.cjs",
+        "@statsig/client-core": "https://ga.jspm.io/npm:@statsig/client-core@3.33.0/src/index.js",
+        "buffer": "https://ga.jspm.io/npm:@jspm/core@2.1.0/nodelibs/browser/buffer.js",
+        "process": "https://ga.jspm.io/npm:@jspm/core@2.1.0/nodelibs/browser/process-production.js",
+        "web-vitals": "https://ga.jspm.io/npm:web-vitals@5.0.3/dist/web-vitals.umd.cjs"
+      }
     }
   }
   </script>
