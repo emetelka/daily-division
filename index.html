@@ -6,6 +6,34 @@
   <title>Daily Division</title>
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="style.css">
+  <script type="importmap">
+  {
+    "imports": {
+      "@statsig/js-client": "https://esm.sh/@statsig/js-client@3",
+      "@statsig/session-replay": "https://esm.sh/@statsig/session-replay@3?deps=@statsig/js-client@3",
+      "@statsig/web-analytics": "https://esm.sh/@statsig/web-analytics@3?deps=@statsig/js-client@3"
+    }
+  }
+  </script>
+  <script type="module">
+    import { StatsigClient } from '@statsig/js-client';
+    import { StatsigSessionReplayPlugin } from '@statsig/session-replay';
+    import { StatsigAutoCapturePlugin } from '@statsig/web-analytics';
+
+    const myStatsigClient = new StatsigClient(
+      "client-mAVm2o5RIg5eyfbuZnuCjx7VQBsqGSY5TaoVNRO1CWy",
+      { userID: "user-id" },
+      {
+        plugins: [
+          new StatsigSessionReplayPlugin(),
+          new StatsigAutoCapturePlugin(),
+        ],
+      }
+    );
+
+    await myStatsigClient.initializeAsync();
+    window.statsigClient = myStatsigClient;
+  </script>
 </head>
 <body>
 
